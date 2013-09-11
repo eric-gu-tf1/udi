@@ -1,0 +1,162 @@
+<?php
+
+function udi_central_module_menu() {
+  global $user;
+  
+  $items['admin/udi-central/modules'] = array(
+    'title' => 'Modules',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('udi_central_module_modules_form'),
+    'access callback' => ($user->uid == 1),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 1
+  );
+  
+  return $items;
+}
+
+function udi_central_module_theme($existing, $type, $theme, $path) {
+  $themes['udi_central_module_modules_form'] = array('arguments' => array());
+  return $themes;
+}
+
+function theme_udi_central_module_modules_form($form) {
+  $header = array("", "Name", "Current Path");
+  
+  $output = drupal_render($form['info']);
+  $output .= drupal_render($form['path_ori']);
+  $output .= drupal_render($form['path_new']);
+  
+  if (!empty($form['modules'])) {
+    foreach (element_children($form['modules']) as $name) {
+      $element = &$form['modules'][$name];
+      if (!empty($element['name'])) {
+		$rows[] = array(
+		  array('data' => drupal_render($element['select']), 'class' => 'op'),
+          array('data' => $element['name']['#value'], 'class' => 'name'),
+		  array('data' => $element['path']['#value'], 'class' => 'path')
+        );
+      }
+    }
+  }
+  
+  $output .= theme('table', $header, $rows, array('id' => 'modules'));
+  $output .= drupal_render($form['links']);
+  $output .= drupal_render($form['button']);
+  $output .= drupal_render($form);
+  
+  return $output;
+}
+
+
+/**
+* Modules configuration page
+*
+*/
+function udi_central_module_modules_form() {
+  drupal_add_js(drupal_get_path('module', 'udi_central_module').'/js/modules.js');
+  drupal_add_css(drupal_get_path('module', 'udi_central_module').'/css/style.css');
+  
+  $form = array();
+  $prefix = "sites/all/modules/";
+  
+  $sql = "
+    SELECT s.filename, s.name, s.info
+    FROM {system} s
+    WHERE s.type = '%s'
+      AND s.filename LIKE '%s%%'
+    ORDER BY s.name ASC
+  ";
+  $result = db_query($sql, 'module', $prefix);
+  
+  if ($result !== false) {
+    $form['info'] = array(
+      '#type' => 'markup',
+      '#value' => t("Updates the Drupal System record of modules directory to reflect any changes to relocation of modules."),
+    );
+  
+    $form['path_ori'] = array(
+      '#type' => 'textfield',
+      '#title' => 'Original module path',
+      '#field_prefix' => $prefix,
+      '#description' => 'Do not include trailing slash.'
+    );
+  
+    $form['path_new'] = array(
+      '#type' => 'textfield',
+      '#title' => 'New module path',
+      '#field_prefix' => $prefix,
+      '#description' => 'Do not include trailing slash.'
+    );
+  
+    while ($row = db_fetch_object($result)) {
+      $info = unserialize($row->info);
+      $form['modules'][$row->name]['name'] = array(
+        '#type' => 'value',
+        '#value' => $info['name']
+      );
+      
+      $form['modules'][$row->name]['path'] = array(
+        '#type' => 'value',
+        '#value' => $row->filename
+      );
+      
+      $form['modules'][$row->name]['select'][$row->name] = array(
+        '#type' => 'checkbox',
+        '#return_value' => 1
+      );  
+    }
+    
+    $form['links']['check_all'] = array(
+      '#type' => 'markup',
+      '#value' => l('Check All', 'admin/udi-central/modules', array('attributes' => array('id' => 'check-all'))),
+      '#prefix' => '<div id="links">'
+    );
+    
+    $form['links']['uncheck_all'] = array(
+      '#type' => 'markup',
+      '#value' => l('Uncheck All', 'admin/udi-central/modules', array('attributes' => array('id' => 'uncheck-all'))),
+      '#suffix' => '</div>'
+    );
+    
+    $form['button']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => 'Save configuration'
+    );
+  }
+  
+  return $form;
+}
+
+function udi_central_module_modules_form_submit($form, &$form_state) {
+  $prefix = "sites/all/modules/";
+  
+  $path_ori = trim($prefix.$form_state['values']['path_ori']);
+  if (strrpos($path_ori, "/", 0) < strlen($path_ori)-1)
+    $path_ori .= '/';
+  
+  $path_new = trim($prefix.$form_state['values']['path_new']);
+  if (strrpos($path_new, "/", 0) < strlen($path_new)-1)
+    $path_new .= '/';
+  
+  $modules = $form_state['values'];
+  unset($modules['path_ori'], $modules['path_new'], $modules['name'], $modules['path'], $modules['op'], $modules['submit'], $modules['form_build_id'], $modules['form_token'], $modules['form_id']);
+  
+  $selected = array_keys($modules, 1);
+  if (!empty($selected)) {
+    $sql = "
+      UPDATE {system}
+      SET filename = REPLACE(filename, '%s', '%s')
+      WHERE type = '%s' AND name = '%s'
+    ";
+    
+    foreach ($selected as $module) {
+      db_query($sql, $path_ori, $path_new, 'module', $module);
+    }
+  }
+  
+  // Clear all caches
+  drupal_flush_all_caches();
+	menu_cache_clear_all();
+  drupal_set_message(t('Caches cleared.'));
+}

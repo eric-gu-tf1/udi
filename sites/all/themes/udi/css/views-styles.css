@@ -1,0 +1,120 @@
+/* $Id: views-styles.css,v 1.1 2009/08/12 04:25:15 johnalbin Exp $ */
+
+/**
+ * @file
+ * Views Styling
+ */
+
+/* Draw the line segment below a view-row */
+
+.news-block .views-field-view-node {
+    float: left;
+}
+
+.news-page .views-row, .events-page .views-row, .press-release-page .views-row, .news-block .views-row, .presentations .views-row, .industry-events .views-row  {
+  padding-bottom: 30px;
+  padding-top: 15px;
+  background: url("../images/teaser-line-segment.png") bottom repeat-x;
+  clear: left;
+  overflow: hidden;
+}
+
+.events-page .views-field-buyitnowbutton, .events-page .views-field-addtocartlink {
+	float: right;
+	clear: right;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+.events-page .views-field-addtocartlink .attributes {
+    float: left !important;
+}
+
+.news-page .views-field-view-node, .press-release-page .views-field-view-node, .events-page .views-field-view-node, .presentations .views-field-view-node, .industry-events .views-field-view-node {
+    float: left;
+    clear: right;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+/* Formats display of images populated by views */
+
+.views-field-field-news-image-fid,
+.views-field-field-event-image-fid,
+.views-field-field-press-release-image-fid,
+.views-field-field-image-fid,
+.views-field-field-blog-image-fid {
+    float: left;
+    margin-right: 15px;
+}
+
+.people .views-field-picture, .chapters .views-field-field-logo-fid {
+    float: left;
+    margin: 0 15px 15px 0;
+}
+
+/* Fix standard column widths for user listings */
+
+.people .col-1, .people .col-2 {
+	width: 462px; /* 942px - 18px / 2 */
+}
+
+/* Correct margins for contact nodes on contact pages */
+
+.contacts .col-1, .contacts .col-2, .municipalities .col-1, .municipalities .col-2 {
+	padding-bottom: 30px;
+}
+
+/* Formats node titles populated by views */
+
+thead .views-field {
+    font-size: 14pt;
+}
+
+.chapters .views-field-title {
+	font-size: 12pt;
+	vertical-align: -25px;
+}
+
+/* Make titles in tables the same size as body copy */
+
+tbody .views-field-title {
+    font-size: 11pt;
+}
+
+/* Format product field items */
+
+.views-field-field-time-value, .uc-price-product {
+    padding-bottom: 10px;
+}
+
+/* Format body text in contact blocks */
+
+.chapters .views-field-body {
+  clear: left;
+}
+
+/* Center logo images in certain grid layouts */
+
+.companies .views-field-field-logo-fid img, .municipalities .views-field-field-logo-fid img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	vertical-align: middle;
+	padding-bottom: 50px;
+}
+
+/* Format the blog list page layout */
+
+.blog caption {
+	float: left;
+}
+
+.blog tbody {
+	float: none;
+}
+
+.blog img {
+	float: left;
+	margin-bottom: 15px;
+}

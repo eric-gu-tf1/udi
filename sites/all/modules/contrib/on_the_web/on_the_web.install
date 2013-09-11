@@ -1,0 +1,15 @@
+<?php 
+//
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function on_the_web_uninstall() {
+  $services = on_the_web_get_services();
+  // Delete variables.
+  foreach ($servies as $service){
+    variable_del('on_the_web_' . $service . '_page');
+  }
+  variable_del('on_the_web_target');
+  variable_del('on_the_web_sitename');
+}

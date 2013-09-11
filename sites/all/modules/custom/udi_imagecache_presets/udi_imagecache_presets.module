@@ -1,0 +1,45 @@
+<?php
+
+function udi_imagecache_presets_imagecache_default_presets() {
+  // Generic Page Image
+  $presets['page_image_normal']['presetname'] = 'page_image_normal';
+  $presets['page_image_normal']['actions'][0]['weight'] = '0';
+  $presets['page_image_normal']['actions'][0]['module'] = 'imagecache';
+  $presets['page_image_normal']['actions'][0]['action'] = 'imagecache_scale';
+  $presets['page_image_normal']['actions'][0]['data'] = array('width' => 192, 'height' => 256);
+  
+  // Blog Image
+  $presets['blog_image_small']['presetname'] = 'blog_image_small';
+  $presets['blog_image_small']['actions'][0]['weight'] = '0';
+  $presets['blog_image_small']['actions'][0]['module'] = 'imagecache';
+  $presets['blog_image_small']['actions'][0]['action'] = 'imagecache_scale_and_crop';
+  $presets['blog_image_small']['actions'][0]['data'] = array('width' => 75, 'height' => 75);
+  
+  // Company Logo - Member, Sponsors, Patron Sponsors
+  $presets['logo_company_normal']['presetname'] = 'logo_company_normal';
+  $presets['logo_company_normal']['actions'][0]['weight'] = '0';
+  $presets['logo_company_normal']['actions'][0]['module'] = 'imagecache';
+  $presets['logo_company_normal']['actions'][0]['action'] = 'imagecache_scale';
+  $presets['logo_company_normal']['actions'][0]['data'] = array('width' => 224, 'height' => 64);
+  
+  // Events Gallery
+  $presets['events_logo_wide']['presetname'] = 'events_logo_wide';
+  $presets['events_logo_wide']['actions'][0]['weight'] = '0';
+  $presets['events_logo_wide']['actions'][0]['module'] = 'imagecache';
+  $presets['events_logo_wide']['actions'][0]['action'] = 'imagecache_scale_and_crop';
+  $presets['events_logo_wide']['actions'][0]['data'] = array('width' => 680, 'height' => 80);
+  
+  $presets['events_gallery_thumb']['presetname'] = 'events_gallery_thumb';
+  $presets['events_gallery_thumb']['actions'][0]['weight'] = '0';
+  $presets['events_gallery_thumb']['actions'][0]['module'] = 'imagecache';
+  $presets['events_gallery_thumb']['actions'][0]['action'] = 'imagecache_scale_and_crop';
+  $presets['events_gallery_thumb']['actions'][0]['data'] = array('width' => 75, 'height' => 75);
+
+  $presets['events_gallery_full']['presetname'] = 'events_gallery_full';
+  $presets['events_gallery_full']['actions'][0]['weight'] = '0';
+  $presets['events_gallery_full']['actions'][0]['module'] = 'imagecache';
+  $presets['events_gallery_full']['actions'][0]['action'] = 'imagecache_scale_and_crop';
+  $presets['events_gallery_full']['actions'][0]['data'] = array('width' => 1024, 'height' => 768);
+  
+  return $presets;
+}

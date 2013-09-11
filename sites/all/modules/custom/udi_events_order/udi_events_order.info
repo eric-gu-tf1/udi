@@ -1,0 +1,13 @@
+name = "UDI Events Order"
+description = "Modify UberCart to set different payment method for an Event."
+
+dependencies[] = udi_events
+dependencies[] = uc_product
+dependencies[] = uc_order
+
+core = "6.x"
+php = "5"
+
+version = "6.x-1.0"
+package = "UDI"
+project = "udi_events_order"

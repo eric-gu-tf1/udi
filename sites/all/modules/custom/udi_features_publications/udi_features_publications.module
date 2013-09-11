@@ -1,0 +1,241 @@
+<?php
+
+include_once('udi_features_publications.features.inc');
+
+define('PUBLICATIONS_WHERE_CLAUSE_TYPE', 1);
+define('PUBLICATIONS_WHERE_CLAUSE_TERM_JURIS', 2);
+define('PUBLICATIONS_WHERE_CLAUSE_TERM_ISSUE', 3);
+
+function udi_features_publications_theme($existing, $type, $theme, $path) {
+  $filepath = 'includes/theme.inc';
+  
+  $themes['views_view_field__publications__page__field_publication_date_value'] = array(
+    'arguments' => array('view' => null, 'field' => null, 'row' => null),
+    'template' => 'templates/views-view-field--publications--page--field-publication-date-value',
+    'file' => $filepath,
+    'original hook' => 'views_view_field',
+    'preprocess functions' => array(
+      'template_preprocess_views_view_field',
+      'udi_features_publications_preprocess_views_view_field__publications__page__field_publication_date_value',
+    ),
+  );
+  
+  return $themes;
+}
+
+/**
+ * Implementation of hook_views_query_alter()
+ *
+ */
+function udi_features_publications_views_query_alter(&$view, &$query) {
+  if ($view->name == 'publications') {
+    unset($query->table_queue['term_node_value_0']['join']->extra);
+    unset($query->table_queue['term_node_value_1']['join']->extra);
+    
+    // All default ARGS will be dropped and will be manually inserted
+    $query->where[0]['args'] = array();
+    
+    // Type filter
+    // NOTE: manually insert the node type for selection
+    if (isset($_GET['t'])) {
+      $sql = sprintf("node.type in ('%s')", str_ireplace('-', '_', $_GET['t']));
+      $query->where[0]['clauses'][PUBLICATIONS_WHERE_CLAUSE_TYPE] = $sql;
+    }
+    else {
+      $sql = sprintf("node.type in ('%s')", implode("', '", udi_publications_valid_types()));
+      $query->where[0]['clauses'][PUBLICATIONS_WHERE_CLAUSE_TYPE] = $sql;
+    }
+
+    // Jurisdiction filter
+    // NOTE: this filter occupies element 2 clauses
+    if (isset($_GET['j'])) {
+      $query->where[0]['args'][0] = intval($_GET['j']);
+    }
+    else {
+      unset($query->where[0]['clauses'][PUBLICATIONS_WHERE_CLAUSE_TERM_JURIS]);      
+    }
+
+    // Issue filter
+    // NOTE: this filter occupies element 3 clauses
+    if (isset($_GET['i'])) {
+      $query->where[0]['args'][1] = intval($_GET['i']);
+    }
+    else {
+      unset($query->where[0]['clauses'][PUBLICATIONS_WHERE_CLAUSE_TERM_ISSUE]);
+    }
+    
+    // Year filter
+    // NOTE: this filter always occupies the date element of the query
+    if (isset($_GET['y'])) {
+      $clause = sprintf("YEAR(node_data_field_news_date.field_publication_date_value) = %d", intval($_GET['y']));
+      $query->where['date']['clauses'][0] = $clause;
+    }
+    else {
+      unset($query->where['date']);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_block()
+ *
+ */
+function udi_features_publications_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks['publications-filter'] = array(
+        'info' => t("UDI Publications Filter Block"),
+        'weight' => 0,
+        'cache' => BLOCK_NO_CACHE
+      );
+      
+      return $blocks;
+    break;
+    
+    case 'view':
+      $block = array();
+      
+      if ($delta == 'publications-filter') {
+        $block['subject'] = t('UDI Publications Filter');
+        
+        // The content-type that the block support is tightly couple to the
+        // URL of the View. Currently only 'news' and 'media-releases' are supported.
+        // PATH[0] must be 'policy'
+        // PATH[1] must be 'publications'
+        $path = explode('/', $_GET['q']);
+        if ($path[0] == 'policy' && $path[1] == 'publications') {
+          $block['content'] = drupal_get_form('udi_features_publications_block_filter_form');
+        }
+      }
+      
+      return $block;
+    break;
+  }
+}
+
+function udi_features_publications_block_filter_form(&$form_state) {
+  $qs = $_GET;
+  unset($qs['q']);
+  
+  $types = array();
+  $jurisdictions = array();
+  $issues = array();
+  $years = array();
+ 
+  // Type
+  $sql = "
+    SELECT DISTINCT nt.name, nt.type
+    FROM {node_type} nt
+      LEFT JOIN {node} n ON nt.type = n.type
+    WHERE nt.type IN ('%s') AND n.status = %d
+  ";
+  $sql = sprintf($sql, implode("', '", udi_publications_valid_types()), 1);
+  if ($result = db_query($sql)) {
+    while ($row = db_fetch_object($result)) {
+      $t = str_ireplace('_', '-', $row->type);
+      $types[$t] = $row->name;
+    }
+  }
+
+  // Jurisdiction and Issue taxonomies
+  $sql = "SELECT v.vid FROM {vocabulary} v WHERE LOWER(v.name) LIKE LOWER('%s')";
+  $jvid = db_result(db_query($sql, 'Jurisdiction'));
+  $ivid = db_result(db_query($sql, 'Issue'));
+  
+  $sql = "SELECT t.name, t.tid FROM {term_data} t WHERE t.vid = %d ORDER BY t.weight, t.name ASC";
+  $result = db_query($sql, $jvid);
+  while ($row = db_fetch_object($result)) {
+    $jurisdictions[$row->tid] = $row->name;
+  }
+
+  $result = db_query($sql, $ivid);
+  while ($row = db_fetch_object($result)) {
+    $issues[$row->tid] = $row->name;
+  } 
+  
+  // Year values
+  $sql = "
+    SELECT MIN(YEAR(nd.field_publication_date_value)) AS min, MAX(YEAR(nd.field_publication_date_value)) AS max 
+    FROM {node} n
+      INNER JOIN {content_field_publication_date} nd ON nd.nid = n.nid AND nd.vid = n.vid
+    WHERE n.type IN ('%s') AND n.status = %d
+  ";
+  $sql = sprintf($sql, implode("', '", udi_publications_valid_types()), 1);
+  if ($result = db_fetch_object(db_query($sql))) {
+    for ($i = (int)$result->max; $i >= (int)$result->min; $i--) {
+      $years[$i] = $i;
+    }
+  }
+  
+  $form['type'] = array(
+    '#type' => 'select',
+    '#title' => t('Type'),
+    '#options' => !empty($types) ? array('all' => t('All')) + $types : array('all' => t('All')),
+    '#default_value' => $qs['t']
+  );
+  
+  $form['jurisdiction'] = array(
+    '#type' => 'select',
+    '#title' => t('Jurisdiction'),
+    '#options' => !empty($jurisdictions) ? array('all' => t('All')) + $jurisdictions : array('all' => t('All')),
+    '#default_value' => $qs['j']
+  );
+  
+  $form['issue'] = array(
+    '#type' => 'select',
+    '#title' => t('Issue'),
+    '#options' => !empty($issues) ? array('all' => t('All')) + $issues : array('all' => t('All')),
+    '#default_value' => $qs['i']
+  );
+  
+  $form['year'] = array(
+    '#type' => 'select',
+    '#title' => t('Year'),
+    '#options' => !empty($years) ? array('all' => t('All')) + $years : array('all' => t('All')),
+    '#default_value' => $qs['y']
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Go')
+  );
+
+  return $form;
+}
+
+function udi_features_publications_block_filter_form_submit($form, &$form_state) {
+  $qs = array();
+  
+  if ($form_state['values']['type'] != 'all') {
+    $qs['t'] = $form_state['values']['type'];
+  } 
+  
+  if ($form_state['values']['year'] != 'all') {
+    $qs['y'] = intval($form_state['values']['year']);
+  }  
+  
+  if ($form_state['values']['jurisdiction'] != 'all') {
+    $qs['j'] = intval($form_state['values']['jurisdiction']);
+  }
+  
+  if ($form_state['values']['issue'] != 'all') {
+    $qs['i'] = intval($form_state['values']['issue']);
+  }
+
+  if (!empty($qs)) {
+    drupal_goto($_GET['q'], $qs);
+  }
+}
+
+function udi_publications_valid_types() {
+  $types = array(
+    'annual_report',
+    'forecast',
+    'municipal_document',
+    'policy_document',
+    'submissions',
+    'udi_letters'
+  );
+  
+  return $types;
+}

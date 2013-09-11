@@ -1,0 +1,13 @@
+#
+# Apache/PHP/Drupal settings:
+#
+
+# Various rewrite rules.
+<IfModule mod_rewrite.c>
+  RewriteEngine on
+
+  RewriteBase /
+
+  RewriteRule ^/*$ http://udi.bc.ca/ [R=301,L]
+
+</IfModule>

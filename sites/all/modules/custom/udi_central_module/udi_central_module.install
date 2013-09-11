@@ -1,0 +1,66 @@
+<?php
+
+// Set the max execution time to 15 minutes.  DO NOT REMOVE!
+ini_set('max_execution_time', 900);
+ini_set('memory_limit', '256M');
+
+if (!preg_match('/install.php/', request_uri())) {
+  $path = drupal_get_path('module', 'udi_central_module') . '/scripts';
+  $contents = array_slice(scandir($path), 2);
+
+  foreach ($contents as $file) {
+    $file_path = $path.'/'.$file;
+    if (preg_match('/script_[0-9]+\.inc$/', $file) && is_file($file_path)) {
+      require_once($file_path);
+    }
+  }
+}
+
+/**
+ * Uninstall module(s) as defined in a list.
+ * Note: List modules in order of dependencies. Module(s) depending on
+ * others listed first, and module(s) depended by others listed last.  
+ */
+function udi_central_module_uninstall_modules(&$ret, $modules) {
+  $ret = array();
+  
+  if (empty($modules)) {
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => 'No module(s) selected.'
+    );
+  }
+  else {
+    $enabled = array();
+    $disabled = array();
+    foreach ($modules as $key => $module) {      
+      if (module_exists($module)) {
+        $enabled[] = $module;        
+      }
+      else {
+        $disabled[] = $module;
+      }
+    }
+    
+    // Disable before uninstall.
+    module_disable($enabled);
+    
+    // Uninstall the module.
+    foreach ($enabled as $module) {
+      drupal_uninstall_module($module);
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => sprintf("<em>%s</em> uninstalled successfully.", $module)
+      );
+    }
+    
+    foreach ($disabled as $module) {
+      $ret[] = array(
+        'success' => FALSE,
+        'query' => sprintf("<em>%s</em> is not enabled and installed or does not exists.", $module)
+      );
+    }
+  }
+  
+  return $ret;
+}

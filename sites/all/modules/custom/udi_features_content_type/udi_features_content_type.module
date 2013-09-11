@@ -1,0 +1,3 @@
+<?php
+
+include_once('udi_features_content_type.features.inc');

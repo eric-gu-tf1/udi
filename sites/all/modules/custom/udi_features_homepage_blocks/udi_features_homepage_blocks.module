@@ -1,0 +1,139 @@
+<?php
+
+include_once('udi_features_homepage_blocks.features.inc');
+
+function udi_features_homepage_blocks_menu() {
+  $items['udi-home'] = array(
+    'title' => '',
+    'page callback' => 'udi_features_homepage_blocks_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK
+  );
+
+  return $items;
+}
+
+function udi_features_homepage_blocks_menu_alter(&$items) {
+  $items['user']['title'] = t("Board of Director & Staff Login");
+}
+
+function udi_features_homepage_blocks_theme($existing, $type, $theme, $path) {
+  $filepath = 'includes/theme.inc';
+
+  $themes['views_view_field__udi_homepage_blocks__block_3__field_time_value'] = array(
+    'arguments' => array('view' => null, 'field' => null, 'row' => null),
+    'template' => 'templates/views-view-field--udi-homepage-blocks--block-3--field-time-value',
+    'file' => $filepath,
+    'original hook' => 'views_view_field',
+    'preprocess functions' => array(
+      'template_preprocess_views_view_field',
+      'udi_features_homepage_blocks_preprocess_views_view_field__udi_homepage_blocks__block_3__field_time_value',
+    ),
+  );
+
+  $themes['views_view_unformatted__udi_homepage_blocks'] = array(
+    'arguments' => array('view' => NULL, 'options' => NULL, 'rows' => NULL, 'title' => NULL),
+    'template' => 'templates/views-view-unformatted--udi-homepage-blocks',
+    'file' => $filepath,
+    'original hook' => 'views_view_unformatted',
+    'preprocess functions' => array(
+      'template_preprocess_views_view_unformatted',
+      'udi_features_homepage_blocks_preprocess_views_view_unformatted__udi_homepage_blocks',
+    ),
+  );
+
+  $themes['udi_board_login_block'] = array(
+    'path' => $path.'/templates',
+    'template' => 'login-block',
+    'arguments' => array('url' => NULL)
+  );
+
+  $themes['udi_tweets_block'] = array(
+    'path' => $path.'/templates',
+    'template' => 'tweets-block',
+    'arguments' => array('url' => NULL),
+  );
+
+  return $themes;
+}
+
+/**
+ * Implements hook_block()
+ *
+ */
+function udi_features_homepage_blocks_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks['board-director-login'] = array(
+      'info' => t("UDI Board of Director Login"),
+      'weight' => 0,
+      'cache' => BLOCK_CACHE_GLOBAL
+    );
+
+    $blocks['udi-homepage-twitter'] = array(
+      'info' => t("UDI Homepage Twitter Block"),
+      'cache' => BLOCK_NO_CACHE,
+    );
+
+    return $blocks;
+  }
+  else if ($op == 'view' && $delta == 'board-director-login') {
+    $block['subject'] = t('UDI Board of Director Login');
+    $block['content'] = udi_features_homepage_blocks_login();
+    return $block;
+  }
+  else if ($op == 'view' && $delta == 'udi-homepage-twitter') {
+    $block['subject'] = t('@udibc');
+    $block['content'] = udi_features_homepage_blocks_tweets();
+    return $block;
+  }
+}
+
+/**
+ * Implementation of hook_preprocess_block()
+ *
+ */
+function udi_features_homepage_blocks_preprocess_block(&$variables) {
+  // Alter Blog block on homepage to title to /blog page
+  if ($variables['block']->delta == 'udi_homepage_blocks-block_1') {
+    $variables['block']->subject = l($variables['block']->subject, 'policy/publications');
+  }
+
+  // Alter News block on homepage to title to /news-central page
+  if ($variables['block']->delta == 'udi_homepage_blocks-block_2') {
+    $variables['block']->subject = l($variables['block']->subject, 'news-central/news');
+  }
+
+  // Alter Upcoming Events block on homepage to title to /events page
+  if ($variables['block']->delta == 'udi_homepage_blocks-block_3') {
+    $variables['block']->subject = l($variables['block']->subject, 'events');
+  }
+
+  // Alter Patron Sponsors block on homepage to title to /about/sponsors page
+  if ($variables['block']->delta == 'udi_homepage_blocks-block_4') {
+    $variables['block']->subject = l($variables['block']->subject, 'about/sponsors');
+  }
+
+  // Alter Patron Sponsors block on homepage to title to /about/sponsors page
+  if ($variables['block']->delta == 'udi_sponsors_patron-block_1') {
+    $variables['block']->subject = l($variables['block']->subject, 'about/sponsors');
+  }
+}
+
+
+function udi_features_homepage_blocks_page() {
+  // Intentionally left blank to display an empty homepage placeholder.
+  return "";
+}
+
+function udi_features_homepage_blocks_login() {
+  global $user;
+  if ($user->uid == 0) {
+    return theme('udi_board_login_block', l(t('Board of Director Login'), 'user'));
+  }
+  return NULL;
+}
+
+function udi_features_homepage_blocks_tweets() {
+
+  return theme('udi_tweets_block');
+}

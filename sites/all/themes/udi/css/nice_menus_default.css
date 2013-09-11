@@ -1,0 +1,568 @@
+/* $Id: nice_menus_default.css,v 1.6 2007/10/29 16:38:28 add1sun Exp $ */
+/*
+  This is the default layout template for nice menus, and will provide
+  a starting point for the look of your menus. To customize, it's
+  recommended to create a custom CSS file using this file as a template,
+  then configure the module to use your custom CSS file
+  (this is done in the global settings tab of the theme administration.)
+
+  To help understand the CSS, the HTML looks like this, where
+    x is a number;
+    TYPE is down/left/right;
+    PATH is the menu path such as node/343;
+    MID is the menu id such as 33):
+  <ul id='nice-menu-x' class='nice-menu nice-menu-TYPE'>
+    <li id='menu-MID' class='menu-path-PATH'><a href='#'>This is a menu item</a></li>
+    <li class='menuparent menu-path-PATH'><a href='#'>A submenu</a>
+      <ul...><li...>...</li>
+      </ul>
+    </li>
+    ...
+  </ul>
+
+  If you have more than one nice-menu and want to target a particular one,
+  use its id (e.g. ul#nice-menu-2).
+
+  See README.txt and the handbook page (http://drupal.org/node/185543)
+  for some CSS customization examples.
+*/
+
+/******************************
+ Global CSS for ALL menu types
+******************************/
+
+ul.nice-menu,
+ul.nice-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul.nice-menu li {
+  border-right: 2px solid #efefef;
+  border-bottom: 2px solid #efefef;
+  float: left;
+  background-color: #fff;
+  /* Additional overrides to deal with Garland theme. */
+  margin: 0;
+  padding-left: 0;
+  background-image: none;
+}
+
+/* Overrides for Garland header. */
+#header-region ul.nice-menu li {
+  margin: 0;
+  /* Padding rules are needed to deal with Garland's header line-height. */
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  background: #eee;
+}
+
+ul.nice-menu a {
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: 13px;
+  color: #97a0a5;
+}
+
+ul.nice-menu a:hover {
+  color: #00205a;
+}
+
+ul.nice-menu ul,
+/* Repeat for Garland header. */
+#header-region ul.nice-menu ul {
+  top: 1.8em;
+  left: -1px;
+  border: 0;
+  margin-right: 0;
+}
+
+/* Override for Garland header. */
+#header-region ul.nice-menu ul {
+  top: 1.7em;
+}
+
+ul.nice-menu ul li {
+  width: 12.5em;
+}
+  
+/******************************
+ VERTICAL (left/right) menus
+******************************/
+
+/* This is the default width of all vertical menus. */
+ul.nice-menu-right, ul.nice-menu-left,
+ul.nice-menu-right li, ul.nice-menu-left li {
+  width: 12.5em;
+}
+
+/* VERTICAL menus where submenus pop RIGHT (default). */
+ul.nice-menu-right ul {
+  width: 12.5em;
+  left: 12.5em;
+  top: -1px;
+}
+
+ul.nice-menu-right ul ul {
+  width: 12.5em;
+  left: 12.5em;
+  top: -1px;
+}
+
+ul.nice-menu-right li.menuparent,
+ul.nice-menu-right li li.menuparent {
+  background: #eee url(arrow-right.png) right center no-repeat;
+}
+
+ul.nice-menu-right li.menuparent:hover,
+ul.nice-menu-right li.over,
+ul.nice-menu-right li li.menuparent:hover,
+ul.nice-menu-right li li.over {
+  background: #ccc url(arrow-right.png) right center no-repeat;
+}
+
+/* VERTICAL menus where submenus pop LEFT. */
+ul.nice-menu-left li ul {
+  width: 12.5em;
+  left: -12.65em;
+  top: -1px;
+}
+
+ul.nice-menu-left li ul li ul {
+  width: 12.5em;
+  left: -12.65em;
+  top: -1px;
+}
+
+ul.nice-menu-left li.menuparent,
+ul.nice-menu-left li li.menuparent {
+  background: #eee url(arrow-left.png) left center no-repeat;
+}
+
+ul.nice-menu-left li.menuparent:hover,
+ul.nice-menu-left li.over,
+ul.nice-menu-left li li.menuparent:hover,
+ul.nice-menu-left li li.over {
+  background: #ccc url(arrow-left.png) left center no-repeat;
+}
+
+ul.nice-menu-left a, ul.nice-menu-left ul a {
+  padding-left: 14px;
+}
+
+/******************************
+ HORIZONTAL (down) menus
+******************************/
+
+ul.nice-menu-down {
+  padding-top: 21px;
+  border-left: 2px solid #efefef;
+}
+
+ul.nice-menu-down li {
+}
+
+ul.nice-menu-down li li {
+  border-top: 0;
+}
+
+ul.nice-menu-down ul {
+  left: 0;
+}
+
+ul.nice-menu-down ul li {
+  clear: both;
+}
+
+ul.nice-menu-down li ul li ul,
+/* Repeat for Garland header. */
+#header-region ul.nice-menu-down li ul li ul {
+  left: 12.5em;
+  top: -1px;
+}
+
+ul.nice-menu-down .menuparent a {
+  padding-right: 15px;
+}
+
+ul.nice-menu-down li.menuparent,
+/* Repeat for Garland header. */
+#header-region ul.nice-menu-down li.menuparent {
+}
+
+ul.nice-menu-down li.menuparent:hover,
+ul.nice-menu-down li.over,
+/* Repeat for Garland header. */
+#header-region ul.nice-menu-down li.menuparent:hover,
+#header-region ul.nice-menu-down li.over {
+}
+
+ul.nice-menu-down li li.menuparent,
+/* Repeat for Garland header. */
+#header-region ul.nice-menu-down li li.menuparent {
+}
+
+ul.nice-menu-down li li.menuparent:hover,
+ul.nice-menu-down li li.over,
+/* Repeat for Garland header. */
+#header-region ul.nice-menu-down li li.menuparent:hover,
+#header-region ul.nice-menu-down li li.over {
+}
+
+/* Format the first menu item 1px less than the others due to it's width being 1px narrower */
+
+/* Main nav menu is different from all the others.  Formatting is here */
+
+/* Altered from the global settings */
+
+#block-nice_menus-1 ul.nice-menu,
+#block-nice_menus-1 ul.nice-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 26px 0;
+}
+
+#block-nice_menus-1 ul.nice-menu li {
+  border: none;
+  border-top: 0;
+  float: left;
+  background-color: #fff;
+  /* Additional overrides to deal with Garland theme. */
+  margin: 0;
+  padding-left: 20;
+  background-image: none;
+  width: 157px;
+}
+
+/* Overrides for Garland header. */
+#block-nice_menus-1 #header-region ul.nice-menu li {
+  margin: 0;
+  /* Padding rules are needed to deal with Garland's header line-height. */
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  background: #fff;
+}
+
+#block-nice_menus-1 ul.nice-menu a {
+}
+
+#block-nice_menus-1 ul.nice-menu ul,
+/* Repeat for Garland header. */
+#block-nice_menus-1 #header-region ul.nice-menu ul {
+  top: 1.8em;
+  left: -1px;
+  border: 0;
+  margin-right: 0;
+  font-size: 13px;
+  line-height: 26px;
+}
+
+/* Override for Garland header. */
+#block-nice_menus-1 #header-region ul.nice-menu ul {
+  top: 1.7em;
+}
+
+#block-nice_menus-1 ul.nice-menu ul li {
+  width: 12.5em;
+}
+
+/* Added by me */
+
+#block-nice_menus-1 ul.nice-menu li.menuparent ul, #block-nice_menus-1 #header-region ul.nice-menu li.menuparent ul {
+	/* margin-top: 1em; */
+/*	left: -1px;
+	right: 0px;
+	padding-top: .7em;
+	border-left: 1px solid #2e89c3;
+	border-right: 1px solid #2e89c3; */
+
+}
+
+/* This removes the border from the primary menus box so it is invisible */
+#block-nice_menus-1 {
+	border: none !important;
+	}
+
+/* This removes the padding to the left of the first menu item */
+
+#block-nice_menus-1 ul {
+
+	/* Superseded by putting a LHS line on the first nav menu item */
+	/* padding: 0 0 0 1px !important; */
+}
+
+#block-nice_menus-1 ul.nice-menu li a:hover {
+    color: #00205a;
+  }
+  
+/* Altered from the nice-menus-down settings */
+
+
+#block-nice_menus-1 ul.nice-menu-down {
+  float: left;
+  border: 0;
+  background: #fff url(../images/menu-line.png) left no-repeat;
+  z-index: 10;
+}
+
+#block-nice_menus-1 ul.nice-menu-down li {
+    background: #fff url(../images/menu-line.png) right no-repeat;
+
+}
+
+#block-nice_menus-1 ul.nice-menu-down li li {
+  border-top: 0;
+}
+
+#block-nice_menus-1 ul.nice-menu-down ul {
+  left: 0;
+}
+
+#block-nice_menus-1 ul.nice-menu-down ul li {
+  clear: both;
+  right: 0px;
+  background: #fff;
+  border-left: 1px solid #2e89c3;
+  border-right: 1px solid #2e89c3;
+  padding-top: 15px;
+  padding-bottom: 5px;
+  width: 156px;
+}
+
+#block-nice_menus-1 ul.nice-menu-down ul {
+	top: 27px;
+	background: transparent;
+    border-bottom: 1px solid #2e89c3;
+	left: -1px;
+}
+
+
+#block-nice_menus-1 ul.nice-menu-down li ul li ul,
+/* Repeat for Garland header. */
+#block-nice_menus-1 #header-region ul.nice-menu-down li ul li ul {
+  left: 157px;
+  top: -1px;
+  border-top: 1px solid #2E89C3;
+  width: 157px;
+}
+
+#block-nice_menus-1 ul.nice-menu-down .menuparent a {
+  color: #97a0a5;
+  text-decoration: none;
+  text-align: left;
+  font-size: 10pt;
+  font-weight: lighter;
+  letter-spacing: 0.7px;
+  line-height: 26pt;
+/*  padding-left: 15px;
+  padding-right: 15px; */
+  text-align: left;
+}
+
+#block-nice_menus-1 ul.nice-menu-down .menuparent li a {
+  line-height: 16pt;
+  padding-left: 8pt;
+}
+
+#block-nice_menus-1 ul.nice-menu-down li.menuparent,
+/* Repeat for Garland header. */
+#block-nice_menus-1 #header-region ul.nice-menu-down li.menuparent {
+}
+
+
+#block-nice_menus-1 ul.nice-menu-down li.menuparent:hover,
+ul.nice-menu-down li.over,
+/* Repeat for Garland header. */
+#block-nice_menus-1 #header-region ul.nice-menu-down li.menuparent:hover,
+#block-nice_menus-1 #header-region ul.nice-menu-down li.over {
+}
+
+#block-nice_menus-1 ul.nice-menu-down li li.menuparent,
+/* Repeat for Garland header. */
+#block-nice_menus-1 #header-region ul.nice-menu-down li li.menuparent {
+}
+
+#block-nice_menus-1 ul.nice-menu-down li li.menuparent:hover,
+#block-nice_menus-1 ul.nice-menu-down li li.over,
+/* Repeat for Garland header. */
+#block-nice_menus-1 #header-region ul.nice-menu-down li li.menuparent:hover,
+#block-nice_menus-1 #header-region ul.nice-menu-down li li.over {
+	
+}
+
+
+/* End for now */
+
+
+#block-nice_menus-1 #menu-1203 ul {
+	left: 0;
+}
+
+#block-nice_menus-1 #menu-1203 ul li {
+	width: 155px;
+	left: 0px;
+}
+
+#block-nice_menus-1 #menu-1203 a {
+    background: #fff url(../images/who_we_are.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1203 a:hover{
+    background: #fff url(../images/who_we_are_rollover.png) center no-repeat;
+	color: transparent;
+}
+
+#block-nice_menus-1 #menu-1203 li a {
+	color: #97a0a5;
+	background: #fff;
+	text-indent: 0;
+
+}
+
+#block-nice_menus-1 #menu-1203 li a:hover {
+	color: #00205a;
+	background: #fff;
+	text-indent: 0;
+
+}
+
+#block-nice_menus-1 #menu-1275 a {
+    background: #fff url(../images/Policy.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1275 a:hover {
+    background: #fff url(../images/Policy_rollover.png) center no-repeat;
+	color: transparent;
+}
+
+#block-nice_menus-1 #menu-1275 li a {
+	color: #97a0a5;
+	background: #fff;
+	text-indent: 0;
+}
+
+#block-nice_menus-1 #menu-1275 li a:hover {
+	color: #00205a;
+	background: #fff;
+	text-indent: 0;
+}
+
+#block-nice_menus-1 #menu-1444 a {
+    background: #fff url(../images/news_and_events.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1444 a:hover {
+    background: #fff url(../images/news_and_events_rollover.png) center no-repeat;
+	color: transparent;
+}
+
+#block-nice_menus-1 #menu-1444 li a {
+	color: #97a0a5;
+	background: #fff;
+	text-indent: 0;
+}
+
+#block-nice_menus-1 #menu-1444 li a:hover {
+	color: #00205a;
+	background: #fff;
+	text-indent: 0;
+}
+
+#block-nice_menus-1 #menu-1267 a {
+    background: #fff url(../images/membership.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1267 a:hover {
+    background: #fff url(../images/membership_rollover.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1267 li a {
+	color: #97a0a5;
+	background: #fff;
+	text-indent: 0;
+}
+
+#block-nice_menus-1 #menu-1267 li a:hover {
+	color: #00205a;
+	background: #fff;
+	text-indent: 0;
+}
+
+#block-nice_menus-1 #menu-1485 a {
+    background: #fff url(../images/the_industry.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1485 a:hover {
+    background: #fff url(../images/the_industry_rollover.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1485 li a {
+	color: #97a0a5;
+	background: #fff;
+	text-indent: 0;
+	font-size: 13px;
+}
+
+#block-nice_menus-1 #menu-1485 li a:hover {
+	color: #00205a;
+	background: #fff;
+	text-indent: 0;
+}
+
+#block-nice_menus-1 #menu-1280 a {
+    background: #fff url(../images/contacts.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1280 a:hover {
+    background: #fff url(../images/contacts_rollover.png) center no-repeat;
+	color: transparent;
+	}
+
+#block-nice_menus-1 #menu-1280 li a {
+	color: #97a0a5;
+	background: #fff;
+	text-indent: 0;
+}
+
+#block-nice_menus-1 #menu-1280 li a:hover {
+	color: #00205a;
+	background: #fff;
+	text-indent: 0;
+}
+
+/* Added by me */
+
+/* Format the main nav menu to avoid the default content padding */
+
+#header .section #block-nice_menus-1 .content {
+	padding: 0;
+}
+
+/* Remove background shading */
+
+.block.block-nice_menus {
+background: none;
+border: none;
+margin-top: -24px; /*Moves secondary menus up to fit immediately below the title bar */
+}
+
+/* Remove content padding from menus */
+
+.block-nice_menus .content {
+    padding: 0 !important;
+}
+
+/* Make board of directors fit in firefox */
+
+#menu-14459 a {
+	letter-spacing: 0px !important;
+}

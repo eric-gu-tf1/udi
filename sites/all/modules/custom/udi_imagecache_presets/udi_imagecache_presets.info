@@ -1,0 +1,11 @@
+name = "UDI Imagecache Presets"
+description = "Provides all ImageCache Presets the site uses."
+
+dependencies[] = imagecache
+
+core = "6.x"
+php = "5"
+
+version = "6.x-1.0"
+package = "UDI"
+project = "udi_imagecache_presets"

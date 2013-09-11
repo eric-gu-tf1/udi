@@ -1,0 +1,9 @@
+name = "UDI Central Module"
+description = "Provide a clean mechanism to module Module path in the database."
+
+core = "6.x"
+php = "5"
+
+version = "6.x-1.0"
+package = "UDI"
+project = "udi_central_module"

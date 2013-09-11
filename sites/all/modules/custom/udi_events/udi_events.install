@@ -1,0 +1,137 @@
+<?php
+
+function udi_events_install() {
+  drupal_install_schema('udi_events');
+}
+
+function udi_events_uninstall() {
+  drupal_uninstall_schema('udi_events');
+}
+
+function udi_events_schema() {
+  $schema['events_attendees'] = array(
+    'fields' => array(
+      'aid' => array(
+        'type' => 'serial'
+      ),
+      'session_id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+      ),
+      'order_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'enid' => array(
+        'type' => 'int',
+        'description' => 'Event NID',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'evid' => array(
+        'type' => 'int',
+        'description' => 'Event VID',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'tnid' => array(
+        'type' => 'int',
+        'description' => 'Ticket (product) NID',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'tvid' => array(
+        'type' => 'int',
+        'description' => 'Ticket (product) VID',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'firstname' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'lastname' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'company' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'status' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'unsigned' => TRUE,
+      )
+    ),
+    'primary key' => array('aid')
+  );
+  
+  $schema['events_ticket_buyers'] = array(
+    'fields' => array(
+      'bid' => array(
+        'type' => 'serial'
+      ),
+      'session_id' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+      ),
+      'enid' => array(
+        'type' => 'int',
+        'description' => 'Event NID',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'evid' => array(
+        'type' => 'int',
+        'description' => 'Event VID',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'tnid' => array(
+        'type' => 'int',
+        'description' => 'Ticket (product) NID',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'tvid' => array(
+        'type' => 'int',
+        'description' => 'Ticket (product) VID',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'firstname' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'lastname' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'company' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'email' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'phone' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+    ),
+    'primary key' => array('bid')
+  );
+  
+  return $schema;
+}

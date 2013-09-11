@@ -1,0 +1,572 @@
+<?php
+
+$content['type']  = array (
+  'name' => 'Slideshow Homepage Image',
+  'type' => 'slideshow_home',
+  'description' => 'Individual image for the slideshow on the homepage.',
+  'title_label' => 'Title',
+  'body_label' => 'Caption',
+  'min_word_count' => '0',
+  'help' => '',
+  'node_options' => 
+  array (
+    'revision' => false,
+    'revision_moderation' => false,
+    'status' => true,
+    'promote' => false,
+    'sticky' => false,
+  ),
+	'new_revisions' => 0,
+  'revisioning_auto_publish' => 0,
+  'excerpt' => '0',
+  'language_content_type' => 2,
+  'addthis_nodetype' => 1,
+  'forward_display' => 1,
+  'old_type' => 'slideshow_home',
+  'orig_type' => '',
+  'module' => 'node',
+  'custom' => '1',
+  'modified' => '1',
+  'locked' => '0',
+  'i18n_newnode_current' => 1,
+  'i18n_required_node' => 1,
+  'i18n_lock_node' => 0,
+  'i18n_node' => 1,
+);
+$content['groups']  = array (
+  0 => 
+  array (
+    'label' => 'Learn more',
+    'group_type' => 'standard',
+    'settings' => 
+    array (
+      'form' => 
+      array (
+        'style' => 'fieldset_collapsible',
+        'description' => 'Link the Learn More button to an internal or external page. Use <em>Learn more (Internal)</em> to find internal Rainforest Alliance pages only. For external pages, use External. <strong>Do Not</strong> use both. Internal will take precedence over External. If you cannot find a page using Internal, please use External instead.',
+      ),
+      'display' => 
+      array (
+        'description' => '',
+        'teaser' => 
+        array (
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        'full' => 
+        array (
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        4 => 
+        array (
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        2 => 
+        array (
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        3 => 
+        array (
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        'token' => 
+        array (
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        'label' => 'above',
+      ),
+    ),
+    'weight' => '0',
+    'group_name' => 'group_slideshow_learn',
+  ),
+);
+$content['fields']  = array (
+  0 => 
+  array (
+    'label' => 'Full Image',
+    'field_name' => 'field_slideshow_image_home_full',
+    'type' => 'filefield',
+    'widget_type' => 'imagefield_widget',
+    'change' => 'Change basic information',
+    'weight' => '-2',
+    'file_extensions' => 'png gif jpg jpeg',
+    'progress_indicator' => 'bar',
+    'file_path' => 'slideshow/home',
+    'max_filesize_per_file' => '2M',
+    'max_filesize_per_node' => '',
+    'max_resolution' => '960x420',
+    'min_resolution' => '960x420',
+    'custom_alt' => 0,
+    'alt' => '',
+    'custom_title' => 1,
+    'title_type' => 'textfield',
+    'title' => '',
+    'use_default_image' => 0,
+    'default_image_upload' => '',
+    'default_image' => NULL,
+    'description' => '',
+    'group' => false,
+    'required' => 1,
+    'multiple' => '0',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'op' => 'Save field settings',
+    'module' => 'filefield',
+    'widget_module' => 'imagefield',
+    'columns' => 
+    array (
+      'fid' => 
+      array (
+        'type' => 'int',
+        'not null' => false,
+        'views' => true,
+      ),
+      'list' => 
+      array (
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => false,
+        'views' => true,
+      ),
+      'data' => 
+      array (
+        'type' => 'text',
+        'serialize' => true,
+        'views' => true,
+      ),
+    ),
+    'display_settings' => 
+    array (
+      'weight' => '-3',
+      'parent' => '',
+      'label' => 
+      array (
+        'format' => 'above',
+      ),
+      'teaser' => 
+      array (
+        'format' => 'path_plain',
+        'exclude' => 0,
+      ),
+      'full' => 
+      array (
+        'format' => 'path_plain',
+        'exclude' => 0,
+      ),
+      4 => 
+      array (
+        'format' => 'image_plain',
+        'exclude' => 0,
+      ),
+      'token' => 
+      array (
+        'format' => 'image_plain',
+        'exclude' => 0,
+      ),
+    ),
+  ),
+  1 => 
+  array (
+    'label' => 'Thumbnail Image',
+    'field_name' => 'field_slideshow_image_home_thumb',
+    'type' => 'filefield',
+    'widget_type' => 'imagefield_widget',
+    'change' => 'Change basic information',
+    'weight' => '-1',
+    'file_extensions' => 'png gif jpg jpeg',
+    'progress_indicator' => 'bar',
+    'file_path' => 'slideshow/home/thumb',
+    'max_filesize_per_file' => '1M',
+    'max_filesize_per_node' => '',
+    'max_resolution' => '93x72',
+    'min_resolution' => '93x72',
+    'custom_alt' => 0,
+    'alt' => '',
+    'custom_title' => 0,
+    'title_type' => 'textfield',
+    'title' => '',
+    'use_default_image' => 0,
+    'default_image_upload' => '',
+    'default_image' => NULL,
+    'description' => '',
+    'group' => false,
+    'required' => 0,
+    'multiple' => '0',
+    'list_field' => '0',
+    'list_default' => 1,
+    'description_field' => '0',
+    'op' => 'Save field settings',
+    'module' => 'filefield',
+    'widget_module' => 'imagefield',
+    'columns' => 
+    array (
+      'fid' => 
+      array (
+        'type' => 'int',
+        'not null' => false,
+        'views' => true,
+      ),
+      'list' => 
+      array (
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => false,
+        'views' => true,
+      ),
+      'data' => 
+      array (
+        'type' => 'text',
+        'serialize' => true,
+        'views' => true,
+      ),
+    ),
+    'display_settings' => 
+    array (
+      'weight' => '-2',
+      'parent' => '',
+      'label' => 
+      array (
+        'format' => 'above',
+      ),
+      'teaser' => 
+      array (
+        'format' => 'path_plain',
+        'exclude' => 0,
+      ),
+      'full' => 
+      array (
+        'format' => 'path_plain',
+        'exclude' => 0,
+      ),
+      4 => 
+      array (
+        'format' => 'image_plain',
+        'exclude' => 0,
+      ),
+      'token' => 
+      array (
+        'format' => 'image_plain',
+        'exclude' => 0,
+      ),
+    ),
+  ),
+  2 => 
+  array (
+    'label' => 'Learn more (Internal)',
+    'field_name' => 'field_slideshow_learn_noderef',
+    'type' => 'nodereference',
+    'widget_type' => 'nodereference_autocomplete',
+    'change' => 'Change basic information',
+    'weight' => '4',
+    'autocomplete_match' => 'starts_with',
+    'size' => '60',
+    'description' => 'Search for an internal Rainforest Alliance page (Node).',
+    'default_value' => 
+    array (
+      0 => 
+      array (
+        'nid' => NULL,
+        '_error_element' => 'default_value_widget][field_slideshow_learn_noderef][0][nid][nid',
+      ),
+    ),
+    'default_value_php' => '',
+    'default_value_widget' => 
+    array (
+      'field_slideshow_learn_noderef' => 
+      array (
+        0 => 
+        array (
+          'nid' => 
+          array (
+            'nid' => '',
+            '_error_element' => 'default_value_widget][field_slideshow_learn_noderef][0][nid][nid',
+          ),
+          '_error_element' => 'default_value_widget][field_slideshow_learn_noderef][0][nid][nid',
+        ),
+      ),
+    ),
+    'group' => 'group_slideshow_learn',
+    'required' => 0,
+    'multiple' => '0',
+    'referenceable_types' => 
+    array (
+      'career' => 'career',
+      'climate_project' => 'climate_project',
+      'event' => 'event',
+      'story' => 'story',
+      'fellow' => 'fellow',
+      'page' => 'page',
+      'species' => 'species',
+      'annual_report' => 0,
+      'board' => 0,
+      'contact' => 0,
+      'slideshow_home' => 0,
+      'news' => 0,
+      'slideshow_section' => 0,
+      'callback' => false,
+      'climate_feed' => false,
+      'lesson' => false,
+      'expert' => false,
+      'general_feed' => false,
+      'highlight_bottom' => false,
+      'highlight_home' => false,
+      'highlight_tabbed' => false,
+      'kids_story' => false,
+      'multimedia_interactive' => false,
+      'multimedia_kids_slideshow' => false,
+      'multimedia_slideshow' => false,
+      'multimedia_video' => false,
+      'publication' => false,
+      'climate_blog_feed_item' => false,
+      'general_blog_feed_item' => false,
+      'tabbed_content' => false,
+    ),
+    'advanced_view' => '',
+    'advanced_view_args' => '',
+    'op' => 'Save field settings',
+    'module' => 'nodereference',
+    'widget_module' => 'nodereference',
+    'columns' => 
+    array (
+      'nid' => 
+      array (
+        'type' => 'int',
+        'unsigned' => true,
+        'not null' => false,
+        'index' => true,
+      ),
+    ),
+    'display_settings' => 
+    array (
+      'weight' => '4',
+      'parent' => 'group_slideshow_learn',
+      'label' => 
+      array (
+        'format' => 'above',
+      ),
+      'teaser' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      4 => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'token' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+  ),
+  3 => 
+  array (
+    'label' => 'Learn more (External)',
+    'field_name' => 'field_slideshow_learn_link',
+    'type' => 'link',
+    'widget_type' => 'link',
+    'change' => 'Change basic information',
+    'weight' => '5',
+    'description' => 'Link an external page (e.g. outside Rainforest Alliance). You may also link internal page using the internal path, e.g. about/contact. <strong>NOTE</strong> that an external page must begin with <em>http://</em>, otherwise it is treated as an internal page.',
+    'default_value' => 
+    array (
+      0 => 
+      array (
+        'url' => '',
+      ),
+    ),
+    'default_value_php' => '',
+    'default_value_widget' => 
+    array (
+      'field_slideshow_learn_link' => 
+      array (
+        0 => 
+        array (
+          'url' => '',
+        ),
+      ),
+    ),
+    'group' => 'group_slideshow_learn',
+    'required' => 0,
+    'multiple' => '0',
+    'validate_url' => 1,
+    'url' => 0,
+    'title' => 'none',
+    'title_value' => '',
+    'enable_tokens' => 0,
+    'display' => 
+    array (
+      'url_cutoff' => '80',
+    ),
+    'attributes' => 
+    array (
+      'target' => 'default',
+      'rel' => '',
+      'class' => '',
+      'title' => '',
+    ),
+    'op' => 'Save field settings',
+    'module' => 'link',
+    'widget_module' => 'link',
+    'columns' => 
+    array (
+      'url' => 
+      array (
+        'type' => 'varchar',
+        'length' => 2048,
+        'not null' => false,
+        'sortable' => true,
+      ),
+      'title' => 
+      array (
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => false,
+        'sortable' => true,
+      ),
+      'attributes' => 
+      array (
+        'type' => 'text',
+        'size' => 'medium',
+        'not null' => false,
+      ),
+    ),
+    'display_settings' => 
+    array (
+      'weight' => '5',
+      'parent' => 'group_slideshow_learn',
+      'label' => 
+      array (
+        'format' => 'above',
+      ),
+      'teaser' => 
+      array (
+        'format' => 'plain',
+        'exclude' => 0,
+      ),
+      'full' => 
+      array (
+        'format' => 'plain',
+        'exclude' => 0,
+      ),
+      4 => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'token' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+  ),
+  4 => 
+  array (
+    'label' => 'Weight',
+    'field_name' => 'field_slideshow_weight',
+    'type' => 'number_integer',
+    'widget_type' => 'optionwidgets_select',
+    'change' => 'Change basic information',
+    'weight' => '1',
+    'description' => 'Provide an ordering to the slideshow images by specifying the Weight. The lightest displays first (e.g. -10), and the heaviest displays last (e.g. 10). ',
+    'default_value' => 
+    array (
+      0 => 
+      array (
+        'value' => '0',
+      ),
+    ),
+    'default_value_php' => '',
+    'default_value_widget' => 
+    array (
+      'field_slideshow_weight' => 
+      array (
+        'value' => '0',
+      ),
+    ),
+    'group' => false,
+    'required' => 1,
+    'multiple' => '0',
+    'min' => '-10',
+    'max' => '10',
+    'prefix' => '',
+    'suffix' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '$n=array(); for($i=-10; $i<11; $i++) {$n[$i] = $i;} return $n;',
+    'op' => 'Save field settings',
+    'module' => 'number',
+    'widget_module' => 'optionwidgets',
+    'columns' => 
+    array (
+      'value' => 
+      array (
+        'type' => 'int',
+        'not null' => false,
+        'sortable' => true,
+      ),
+    ),
+    'display_settings' => 
+    array (
+      'label' => 
+      array (
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      4 => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      2 => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      3 => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'token' => 
+      array (
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+  ),
+);
+$content['extra']  = array (
+  'title' => '-5',
+  'body_field' => '-3',
+  'revision_information' => '4',
+  'author' => '3',
+  'options' => '7',
+  'language' => '-4',
+  'translation' => '6',
+  'menu' => '2',
+  'path' => '5',
+);

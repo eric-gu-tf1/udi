@@ -1,0 +1,12 @@
+name = "UDI Events"
+description = "Modifies Event (UDI) and UberCart to provide event ticket purchasing options, and additional functionalities."
+
+dependencies[] = uc_product
+dependencies[] = uc_stock
+
+core = "6.x"
+php = "5"
+
+version = "6.x-1.0"
+package = "UDI"
+project = "udi_events"

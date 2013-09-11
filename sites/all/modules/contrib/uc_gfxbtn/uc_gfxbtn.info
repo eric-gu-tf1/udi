@@ -1,0 +1,14 @@
+;;$Id$ uc_gfxbtn.info,v 1.2 2009/01/27 14:03:28 longwave Exp $
+name = Custom Image As Shopping Button
+description = Allow administrators to change the display shopping cart button
+dependencies[] = uc_store
+dependancies[] = uc_product
+dependancies[] = uc_cart
+package = Ubercart - payment
+core = 6.14
+
+; Information added by drupal.org packaging script on 2009-07-30
+version = "6.x-1.4"
+core = "6.x"
+project = "uc_gfxbtn.info"
+datestamp = "1248955928"

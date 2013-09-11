@@ -1,0 +1,105 @@
+/*
+ * HOMEPAGE SLIDESHOW
+ */
+#slideshow {
+	width: 1006px;
+	margin: 0;
+	position: relative;
+	z-index: 0;
+}
+	
+#slide-page-wrap {
+	background-color:#eee;
+	width: 1006px;
+	margin: 0;
+	position: relative;
+	height: 330px;
+}
+
+#slide-page-wrap .panelContainer { 
+	position: relative;
+	left: 0;
+	top: 0;
+}
+
+#slide-page-wrap .panelContainer .panel { 
+	height: 330px;
+	position: absolute;
+	width: 1006px;
+}
+
+#slide-page-wrap #slide-nav { 
+	position: absolute;
+	margin: 0;
+	height: 20px;
+	bottom: 5px;
+	right:0
+}
+
+#slide-page-wrap #slide-nav a.cross-link {
+	width: 16px;
+	float: left;
+	margin-right:5px;
+}
+
+#slide-page-wrap #slide-nav .cross-link {
+	position: relative;
+	display: block;
+	z-index: 150;
+	background-color:#d3ae44;
+	height: 16px;
+	width: 17px;
+	text-indent:-99999em;
+	background:transparent url(../images/sprite-pager.png) center top no-repeat
+}
+
+#slide-page-wrap #slide-nav .nav-thumb { 
+	border: none;
+	height: 16px;
+	width: 16px;
+	position: relative;
+	z-index: 500;
+}
+
+#slide-page-wrap #slide-nav .nav-thumb a:hover,
+#slide-page-wrap #slide-nav .cross-link.active-thumb	{
+	position: relative;
+	z-index: 900;
+	background-position:center bottom !important;
+}
+
+#slide-page-wrap .pic-wrapper {
+	float:left;
+}
+
+#slide-page-wrap .photo-meta-data {
+	padding: 10px; 
+	height: auto; 
+	width: 300px;
+	z-index: 9999;
+	float:left;
+}
+
+#slide-page-wrap .photo-meta-data h3 {
+	word-spacing: normal;
+	line-height: 1em;
+	font-size: 26px;
+}
+
+
+#slide-page-wrap .photo-meta-data span {
+
+}
+
+#slide-page-wrap .learn-more {
+}
+
+
+#slide-page-wrap .learn-more a { 
+	float:left;
+	margin-top:10px;
+	color:#014ea5;
+	font-weight:bold;
+	font-size:11pt;
+	text-decoration:none;
+}

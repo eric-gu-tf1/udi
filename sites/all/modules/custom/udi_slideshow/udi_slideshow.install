@@ -1,0 +1,11 @@
+<?php
+
+function udi_slideshow_install() {
+  // Install slideshow CCKs
+  $types = array('slideshow_home', 'slideshow_section');
+  udi_central_cck_import($types, 'udi_slideshow');
+}
+
+function udi_slideshow_uninstall() {
+
+}

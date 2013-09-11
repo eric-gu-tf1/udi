@@ -1,0 +1,237 @@
+<?php
+
+define('SLIDESHOW_MAX_IMAGE', 4);
+
+function udi_slideshow_theme($existing, $type, $theme, $path) {
+  $themes['slideshow_home'] = array(
+	'path' => $path.'/templates',
+	'template' => 'slideshow.home',
+	'arguments' => array('images' => NULL)
+  );
+
+  $themes['slideshow_section'] = array(
+	'path' => $path.'/templates',
+	'template' => 'slideshow.section',
+	'arguments' => array('images' => NULL)
+  );
+
+  return $themes;
+}
+
+function udi_slideshow_imagecache_default_presets() {
+  $presets['slideshow_section_norm']['presetname'] = 'slideshow_section_norm';
+  $presets['slideshow_section_norm']['actions'][0]['weight'] = '0';
+  $presets['slideshow_section_norm']['actions'][0]['module'] = 'imagecache';
+  $presets['slideshow_section_norm']['actions'][0]['action'] = 'imagecache_scale_and_crop';
+  $presets['slideshow_section_norm']['actions'][0]['data'] = array('width' => 665, 'height' => 330);
+
+  $presets['slideshow_section_large']['presetname'] = 'slideshow_section_large';
+  $presets['slideshow_section_large']['actions'][0]['weight'] = '0';
+  $presets['slideshow_section_large']['actions'][0]['module'] = 'imagecache';
+  $presets['slideshow_section_large']['actions'][0]['action'] = 'imagecache_scale_and_crop';
+  $presets['slideshow_section_large']['actions'][0]['data'] = array('width' => 1006, 'height' => 330);
+
+  return $presets;
+}
+
+/**
+ * Implementation of hook_default_cck()
+ */
+function udi_slideshow_default_cck() {
+  $types = array('slideshow_home', 'slideshow_section');
+
+  foreach ($types as $key => $cck) {
+	$files[$cck]['filepath'] = drupal_get_path('module', 'udi_slideshow') .'/cck/'. $cck .'.cck';
+  }
+
+  return $files;
+}
+
+function udi_slideshow_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'block_admin_configure' && $form['module']['#value'] == 'udi_slideshow') {
+  	$form['block_settings']['title']['#default_value'] = '<none>';
+  }
+}
+
+function udi_slideshow_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks['home'] = array(
+        'info' => t('UDI Slideshow (Homepage)'),
+        'status' => 1,
+        'region' => 'content_top',
+        'visibility' => 1,
+        'pages' => '<front>',
+      );
+
+      $blocks['section'] = array(
+        'info' => t('UDI Slideshow (Section)'),
+        'status' => 1,
+        'region' => 'content_top',
+      );
+
+      return $blocks;
+    break;
+
+    case 'view':
+      if ($delta == 'home') {
+        $block = array('subject' => 'UDI Slideshow (Homepage)', 'content' => udi_slideshow_home());
+      }
+      else if ($delta == 'section') {
+        $block = array('subject' => 'UDI Slideshow (Section)', 'content' => udi_slideshow_section());
+      }
+
+      return $block;
+    break;
+  }
+}
+
+function udi_slideshow_home() {
+  $sql = "
+    SELECT
+      n.nid
+    FROM {node} n
+    INNER JOIN {content_field_slideshow_weight} c
+      ON (c.nid = n.nid AND c.vid = n.vid)
+    WHERE
+      (n.type = '%s') AND
+      (n.status = %d)
+    ORDER BY c.field_slideshow_weight_value, n.nid ASC
+  ";
+  if ($result = db_query($sql, 'slideshow_home', 1)) {
+    while ($row = db_fetch_object($result)) {
+      $set[] = $row->nid;
+    }
+  }
+
+  // Process the set. Only pick to the amount up to SLIDESHOW_MAX_IMAGE
+  if (count($set) <= SLIDESHOW_MAX_IMAGE) {
+    $images = $set;
+  }
+  else {
+    for ($i = 0; $i < SLIDESHOW_MAX_IMAGE; $i++) {
+      $images[] = $set[$i];
+    }
+  }
+
+  // Process images into usable format
+  if (!empty($images)) {
+    foreach ($images as $delta => $nid) {
+      $node = node_load($nid);
+      $formatted_internal_link = NULL;
+      
+      if ($node->field_slideshow_learn_noderef[0]['nid']) {
+        $learn_more = 'node/'.$node->field_slideshow_learn_noderef[0]['nid'];
+        $formatted_internal_link = url($learn_more);
+      }
+      else if ($node->field_slideshow_learn_link[0]['url']) {
+        $learn_more = $node->field_slideshow_learn_link[0]['url'];
+      }
+      
+      $image_title = $node->field_slideshow_image_home_full[0]['data']['title'] ? strip_tags($node->field_slideshow_image_home_full[0]['data']['title']) : strip_tags($node->title);
+      
+      $images[$delta] = (object)array(
+        'title' => strip_tags($node->title),
+        'caption'  => strip_tags($node->body),
+        'image' => theme('imagecache', 'slideshow_section_norm', $node->field_slideshow_image_home_full[0]['filepath'], $image_title, $image_title, array('class' => '')),
+        'thumb_filepath' => $node->field_slideshow_image_home_thumb[0]['filepath'],
+        'link' => $learn_more ? l(t('read more'), $learn_more) : NULL,
+        'raw_learn_more_url' => $formatted_internal_link ? $formatted_internal_link : $learn_more,
+      );
+      $learn_more = NULL;
+    }
+  }
+
+  $path = drupal_get_path('module', 'udi_slideshow');
+  drupal_add_css($path.'/css/slideshow.home.css');
+
+  if (count($images) > 1) {
+    drupal_add_js($path.'/js/jquery.cycle.all.min.js');
+    drupal_add_js($path.'/js/slideshow.home.js');
+  }
+
+  return theme('slideshow_home', $images);
+}
+
+function udi_slideshow_section() {
+  // In normal case there will only be 1 slideshow box
+  // but it is able to display more
+  $path = drupal_get_path_alias($_GET['q']);
+  $path_parts = explode('/', $path);
+
+  $sql = "
+    SELECT p.*
+    FROM {content_field_slideshow_sect_page_url} p
+      LEFT JOIN {node} n ON n.nid = p.nid AND n.vid = p.vid
+      LEFT JOIN {content_field_slideshow_weight} c ON n.nid = c.nid AND n.vid = c.vid
+    WHERE p.field_slideshow_sect_page_url_value LIKE '%s%%'
+    ORDER BY c.field_slideshow_weight_value, n.nid ASC
+  ";
+  if ($result = db_query($sql, $path_parts[0])) {
+    while ($row = db_fetch_object($result)) {
+      $slides[$row->nid][] = $row->field_slideshow_sect_page_url_value;
+    }
+  }
+
+  if (!empty($slides)) {
+    foreach ($slides as $nid => $slide) {
+      if (drupal_match_path($path, implode("\r\n", $slide))) {	// link breaks need double quote
+        $images[] = $nid;
+      }
+    }
+  }
+
+  // Process the image nodes
+  if (!empty($images)) {
+    $path = drupal_get_path('module', 'udi_slideshow');
+    $auto = array();
+
+    foreach ($images as $delta => $nid) {
+      $node = node_load($nid);
+
+      if ($node->field_slideshow_learn_link[0]['url']) {
+        $link = check_url(url($node->field_slideshow_learn_link[0]['url']));
+      }
+
+      $alt = 'Slideshow';
+      $title = $node->field_slideshow_image_sect_full[0]['data']['title'] ? check_plain($node->field_slideshow_image_sect_full[0]['data']['title']) : check_plain($node->title);
+      $auto[] = (object)array(
+        'title' => strip_tags($node->title),
+        'caption' => strip_tags($node->body) ? strip_tags($node->body) : NULL,
+        'image' => theme('imagecache', 'slideshow_section_large', $node->field_slideshow_image_sect_full[0]['filepath'], $alt, $title, array('class' => '')),
+        'link' => $link
+      );
+    }
+
+    drupal_add_css($path.'/css/slideshow.section.css');
+    if (!empty($auto)) {
+      if (count($auto) > 1) {
+        drupal_add_js($path.'/js/jquery.innerfade.js');
+        drupal_add_js($path.'/js/slideshow.section.js');
+      }
+      return theme('slideshow_section', $auto, false);
+    }
+  }
+
+  return false;
+}
+
+function udi_slideshow_section_is_available($path = NULL) {
+  $matches = array();
+  
+  if (is_null($path)) {
+    $path = drupal_get_path_alias($_GET['q']);
+  }
+  $path_parts = explode('/', $path);
+  
+  $sql = "SELECT p.* FROM {content_field_slideshow_sect_page_url} p WHERE p.field_slideshow_sect_page_url_value LIKE '%s%%'";
+  if ($result = db_query($sql, $path_parts[0])) {
+    while ($row = db_fetch_object($result)) {      
+      if (drupal_match_path($path, trim($row->field_slideshow_sect_page_url_value))) {
+        $matches[] = $row->nid;
+      }
+    }
+  }
+  
+  return count($matches) > 0 ? TRUE : FALSE;
+}

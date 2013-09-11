@@ -1,0 +1,35 @@
+<?php
+
+//function udi_events_order_menu() {
+//  $items['admin/store/reports/events'] = array(
+//    'title' => 'UDI Events reports',
+//    'page callback' => 'udi_events_order_reports',
+//    'access arguments' => array('view reports'),
+//    'type' => MENU_NORMAL_ITEM,
+//  );
+//  
+//  return $items;
+//}
+//
+//function udi_events_order_reports() {
+//  $sql = "
+//    SELECT
+//    FROM {}
+//  ";
+//}
+
+function udi_events_order_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'uc_cart_checkout_form') {
+    // Assuming there will always be 1 item in the Cart.
+    $items = uc_cart_get_contents();    
+    $type = db_result(db_query("SELECT n.type FROM {node} n WHERE n.nid = %d AND n.vid = %d", $items[0]->nid, $items[0]->vid));
+    
+    // Explicitly looking for Event NON-MEMBER and remove Invoice checkout option
+    if ($type == 'event_price_non_member') {
+      unset($form['panes']['payment']['payment_method']['#options']['check']);
+    }
+    
+    // Make credit card method as default
+    $form['panes']['payment']['payment_method']['#default_value'] = 'credit';
+  }
+}

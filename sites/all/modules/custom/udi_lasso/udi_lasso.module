@@ -1,0 +1,188 @@
+<?php
+
+
+/**
+ * UDI_LASSO_DEFAULT_CLIENT_ID - Default ClientID that is used to post to lasso
+ */
+define('UDI_LASSO_DEFAULT_CLIENT_ID', '484');
+
+
+/**
+ * UDI_LASSO_DEFAULT_PROJECT_ID - Default ProjectID that is used to post to lasso
+ */
+define('UDI_LASSO_DEFAULT_PROJECT_ID', '1543');
+
+
+/**
+ * UDI_LASSO_DEFAULT_LASSO_UID - Default LassoUID that is used to post to lasso
+ */
+define('UDI_LASSO_DEFAULT_LASSO_UID', '9~w4Uw4@{q');
+
+
+/**
+ * UDI_LASSO_DEFAULT_LASSO_SINGLE_REGISTRATION_PAGE - Default sample single registration page url
+ */
+define('UDI_LASSO_DEFAULT_LASSO_SINGLE_REGISTRATION_PAGE', 'http://www.mylasso.com/registrant_signup.php');
+
+
+/**
+ * UDI_LASSO_CLIENT_ID - Variable to set/get Lasso registration client id
+ */
+define('UDI_LASSO_CLIENT_ID', 'udi_lasso_client_id');
+
+
+/**
+ * UDI_LASSO_PROJECT_ID - Variable to set/get Lasso ProjectID 
+ */
+define('UDI_LASSO_PROJECT_ID', 'udi_lasso_project_id');
+
+
+/**
+ * UDI_LASSO_LASSO_UID - Variable to set/get Lasso UID
+ */
+define('UDI_LASSO_LASSO_UID', 'udi_lasso_lasso_uid');
+
+
+/**
+ * UDI_LASSO_LASSO_SINGLE_REGISTRATION_PAGE - Variable to set/get Lasso single registration page url
+ */
+define('UDI_LASSO_LASSO_SINGLE_REGISTRATION_PAGE', 'udi_lasso_lasso_single_registration_page');
+
+
+/**
+ * UDI_LASSO_REGISTRATION_FORM_PLACEHOLDER - placeholder for the lasso form registration
+ * that is displayed on /policy/committees page
+ */
+define('UDI_LASSO_REGISTRATION_FORM_PLACEHOLDER', '!udi_lasso_registration_form_placeholder');
+
+
+/**
+ * UDI_LASSO_REGISTRATION_THANK_YOU_LANDING_INTERNAL_URL - Lasso Sign up thank you page 
+ */
+define('UDI_LASSO_REGISTRATION_THANK_YOU_LANDING_INTERNAL_URL', 'lasso/signup/confirmation/%');
+
+
+/**
+ * UDI_LASSO_REGISTRATION_PROCESS_TOKEN - Session variable used to make sure that
+ * user has through the registration form on /policy/committees
+ */
+define('UDI_LASSO_REGISTRATION_PROCESS_TOKEN', 'udi_lasso_registration_process_token');
+
+
+
+/**
+ * Implemenation of hook_perm()
+ */
+function udi_lasso_perm() {
+  
+  $permissions = array(
+    'administer lasso integration settings',
+  );
+  
+  return $permissions;
+}
+
+/**
+ * Implementation of hook_menu()
+ */
+function udi_lasso_menu() {
+  $items = array();
+  
+  $items['admin/settings/lasso'] = array(
+    'title'            => t('Lasso'),
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('udi_lasso__forms_lasso_settings_form'),
+    'access arguments' => 'administer lasso integration settings',
+    'type'             => MENU_NORMAL_ITEM,
+    'file'             => 'includes/udi_lasso.forms.inc'
+  );
+  $items[UDI_LASSO_REGISTRATION_THANK_YOU_LANDING_INTERNAL_URL] = array(
+    'title'            => t('Email Subscription'),
+    'description'      => 'Lasso Registration Thank You page',
+    'page callback'    => 'udi_lasso__callbacks_lasso_signup_thankyou_page',
+    'access callback'  => '_udi_lasso_lasso_registration_signup_thankyou_page_access_callback',
+    'access arguments' => array(3),
+    'type'             => MENU_CALLBACK,
+    'file'             => 'includes/udi_lasso.callbacks.inc'
+  );
+  
+  return $items;
+}
+
+
+/**
+ * Implementation of hook_theme()
+ */
+function udi_lasso_theme($existing, $type, $theme, $path) {
+  $themes = array();
+	$theme_inc_path = 'includes/udi_lasso.themes.inc';
+  
+  $themes['udi_lasso_registration_thankyou_page'] = array(
+		'path'      => $path.'/templates',
+		'template'  => 'udi-lasso-registration-thankyou-page',
+	);
+  
+  return $themes;
+}
+
+
+/**
+ * Implementation of hook_nodeapi()
+ */
+function udi_lasso_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  
+  global $user;
+  
+  switch($op) {
+    case 'view':
+      
+      /* lasso integration registration page must be displayed /policy/committees page */
+      $on_committees_page = (($node->type == 'page') && ($node->path == 'policy/committees'));
+      
+      if($on_committees_page) {
+        
+        module_load_include('inc', 'udi_lasso', 'includes/udi_lasso.forms');
+         
+        $lasso_registration_form = drupal_get_form('udi_lasso__forms_lasso_registration_form');
+        
+        $node->content['body']['#value'] = str_replace(
+          UDI_LASSO_REGISTRATION_FORM_PLACEHOLDER,
+          $lasso_registration_form,
+          $node->content['body']['#value']
+        );
+      }
+      break;
+  }
+}
+
+
+/**
+ * access callback function of lasso/signup/confirmation
+ */
+function _udi_lasso_lasso_registration_signup_thankyou_page_access_callback($token) {
+  
+  global $user;
+  
+  /* we need this static because access callbacks are called twice by Drupal */
+  static $session_token = NULL;
+  
+  /* if NULL, it means that its the first time this callback was invoked */
+  if($session_token == NULL) {
+    
+    /* how you implement a token is up to you, for now use time() */
+    $session_token = $_SESSION[UDI_LASSO_REGISTRATION_PROCESS_TOKEN];
+    
+    /* reset token */
+    unset($_SESSION[UDI_LASSO_REGISTRATION_PROCESS_TOKEN]);
+  }
+  
+  if($user->uid == 1) {
+    return TRUE;
+  }
+  
+  if($session_token == $token) {
+    return TRUE;
+  }
+  
+  return FALSE;
+}

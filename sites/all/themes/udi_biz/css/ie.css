@@ -1,0 +1,86 @@
+/**
+ * Drupal admin tables
+ */
+#content tr.even th,
+#content tr.even td,
+#content tr.odd th,
+#content tr.odd td {
+  border-bottom: 1px solid #ccc; /* IE doesn't display borders on table rows */
+}
+
+/**
+ * Minor fix for primary and secondary tabs in IE
+ */
+ul.primary li a:hover {
+	cursor:pointer;
+	color:#555;
+	text-decoration:none;
+}
+ul.secondary li a:hover{
+	cursor:pointer;
+	color:#555;
+	text-decoration:none;
+}
+
+ul.primary li a,
+ul.primary li a .tab,
+ul.secondary li a,
+ul.secondary li a .tab {
+  display: inline; /* Otherwise the blocks mistakenly get 100% width in IE5 */
+  display: inline-block; /* Otherwise the blocks mistakenly get 100% width in IE6 */
+}
+
+ul.primary,
+ul.secondary {
+  width: 100%; /* Otherwise IE5 treats the ul as floated */
+  width: auto; /* Reset to auto width for IE6 */
+}
+
+
+/**
+ * Specific Fixes - IE7
+ */
+
+.ie7 .block-navigation.block-id-701 {
+	margin-top:5px;
+}
+
+.ie7 .block-navigation.block-id-701 li li a{
+	width:200px !important;
+	display:block;
+}
+
+.ie7 #search-bar #search .form-submit {
+ font-size:1px;
+ width:15px;
+ height:15px;
+ color:#dedede;
+}
+
+.ie7 #search-bar #search,
+.ie8 #search-bar #search{
+	background:transparent url(../images/bg-search-bar.png) center left no-repeat;
+	width:236px;
+	}
+	
+.ie7 #search-bar,
+.ie8 #search-bar,
+.ie9 #search-bar{
+	top:100px;
+}
+
+.ie7 #search-bar #search .form-item input {
+	margin-top:-27px;
+}
+
+.ie8 #search-bar #search .form-item input {
+	margin-top:-40px;
+}
+
+.ie8 .has-banner .breadcrumb  {
+	top:225px
+}
+
+.ie7 .breadcrumb a {
+	color:#D3AE44
+}

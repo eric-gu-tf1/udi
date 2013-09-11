@@ -1,0 +1,5 @@
+/* DESIGN & DEVELOPMENT */
+Team:       Popgun Media
+URL:        http://popgunmedia.com
+Contact:    hello@popgunmedia.com
+From:       Vancouver, Canada

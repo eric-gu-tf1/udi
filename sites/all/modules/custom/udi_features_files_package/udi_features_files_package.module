@@ -1,0 +1,20 @@
+<?php
+
+include_once('udi_features_files_package.features.inc');
+
+function udi_features_files_package_theme($existing, $type, $theme, $path) {
+  $filepath = 'includes/theme.inc';
+  
+  $themes['views_view_unformatted__udi_dashboard__page'] = array(
+	'arguments' => array('view' => NULL, 'options' => NULL, 'rows' => NULL, 'title' => NULL),
+	'template' => 'templates/views-view-unformatted--udi-dashboard--page',
+	'file' => $filepath,
+	'original hook' => 'views_view_unformatted',
+	'preprocess functions' => array(
+	  'template_preprocess_views_view_unformatted',
+    'udi_features_files_package_preprocess_views_view_unformatted__udi_dashboard__page',
+    ),
+  );
+  
+  return $themes;
+}

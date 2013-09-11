@@ -1,0 +1,4 @@
+name = UDI LASSO
+description = Provides LASSO functionality for the UDI site
+package = "UDI"
+core = 6.x

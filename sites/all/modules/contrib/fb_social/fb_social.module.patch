@@ -1,0 +1,13 @@
+Index: fb_social.module
+===================================================================
+--- fb_social.module	(revision 185)
++++ fb_social.module	(working copy)
+@@ -232,7 +232,7 @@
+          status: true, 
+          cookie: true,
+          xfbml: true,
+-         channelUrl: " . drupal_to_js($channel_url) . ",
++         channelUrl: " . drupal_to_js($channel_url) . "
+        });
+        
+        ";

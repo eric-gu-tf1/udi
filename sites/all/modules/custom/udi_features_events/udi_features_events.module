@@ -1,0 +1,291 @@
+<?php
+
+include_once('udi_features_events.features.inc');
+
+define('REGION_CLAUSES', 2);
+define('MULTI_REGION_ARG', 2);
+define('SINGLE_REGION_ARG', 1);
+
+function udi_features_events_theme($existing, $type, $theme, $path) {
+  $filepath = 'includes/theme.inc';
+  
+  $themes['views_view_unformatted__udi_events__page'] = array(
+	'arguments' => array('view' => NULL, 'options' => NULL, 'rows' => NULL, 'title' => NULL),
+	'template' => 'templates/views-view-unformatted--udi-events--page',
+	'file' => $filepath,
+	'original hook' => 'views_view_unformatted',
+	'preprocess functions' => array(
+      'template_preprocess_views_view_unformatted',
+      'udi_features_events_preprocess_views_view_unformatted__udi_events__page',
+    ),
+  );
+  
+  $themes['views_view_unformatted__udi_events_udi__page'] = array(
+	'arguments' => array('view' => NULL, 'options' => NULL, 'rows' => NULL, 'title' => NULL),
+	'template' => 'templates/views-view-unformatted--udi-events-udi--page',
+	'file' => $filepath,
+	'original hook' => 'views_view_unformatted',
+	'preprocess functions' => array(
+      'template_preprocess_views_view_unformatted',
+      'udi_features_events_preprocess_views_view_unformatted__udi_events_udi__page',
+    ),
+  );
+  
+  $themes['views_view_unformatted__udi_events_industry__page'] = array(
+	'arguments' => array('view' => NULL, 'options' => NULL, 'rows' => NULL, 'title' => NULL),
+	'template' => 'templates/views-view-unformatted--udi-events-industry--page',
+	'file' => $filepath,
+	'original hook' => 'views_view_unformatted',
+	'preprocess functions' => array(
+      'template_preprocess_views_view_unformatted',
+      'udi_features_events_preprocess_views_view_unformatted__udi_events_industry__page',
+    ),
+  );
+  
+  $themes['views_view_field__udi_events__page__field_time_value'] = array(
+	'arguments' => array('view' => null, 'field' => null, 'row' => null),
+	'template' => 'templates/views-view-field--udi-events--page--field-time-value',
+	'file' => $filepath,
+	'original hook' => 'views_view_field',
+	'preprocess functions' => array(
+      'template_preprocess_views_view_field',
+      'udi_features_events_preprocess_views_view_field__udi_events__page__field_time_value',
+    ),
+  );
+  
+  $themes['views_view_field__udi_events_udi__page__field_time_value'] = array(
+	'arguments' => array('view' => null, 'field' => null, 'row' => null),
+	'template' => 'templates/views-view-field--udi-events-udi--page--field-time-value',
+	'file' => $filepath,
+	'original hook' => 'views_view_field',
+	'preprocess functions' => array(
+      'template_preprocess_views_view_field',
+      'udi_features_events_preprocess_views_view_field__udi_events_udi__page__field_time_value',
+    ),
+  );
+  
+  $themes['views_view_field__udi_events_industry__page__field_time_value'] = array(
+	'arguments' => array('view' => null, 'field' => null, 'row' => null),
+	'template' => 'templates/views-view-field--udi-events-industry--page--field-time-value',
+	'file' => $filepath,
+	'original hook' => 'views_view_field',
+	'preprocess functions' => array(
+      'template_preprocess_views_view_field',
+      'udi_features_events_preprocess_views_view_field__udi_events_industry__page__field_time_value',
+    ),
+  );
+  
+  $themes['events_region_filter'] = array(
+    'path' => $path.'/templates',
+	'template' => 'region-block',
+	'arguments' => array('regions' => NULL)
+  );
+
+  return $themes;
+}
+
+/**
+ * Implementation of hook_views_query_alter()
+ *
+ */
+function udi_features_events_views_query_alter(&$view, &$query) {  
+  //
+  // Region filter
+  //
+  if ($view->name == 'udi_events' || $view->name == 'udi_events_udi') {
+    unset($query->table_queue['term_node_value_0']['join']->extra);
+    
+    if (isset($_GET['r'])) {
+      if ($view->name == 'udi_events') {
+        $query->where[0]['args'][MULTI_REGION_ARG] = $_GET['r'];
+      }
+      else if ($view->name == 'udi_events_udi') {
+        $query->where[0]['args'][SINGLE_REGION_ARG] = $_GET['r'];
+      }
+    }
+    else {
+      if ($view->name == 'udi_events') {
+        unset($query->where[0]['clauses'][REGION_CLAUSES], $query->where[0]['args'][MULTI_REGION_ARG]);
+      }
+      else if ($view->name == 'udi_events_udi') {
+        unset($query->where[0]['clauses'][REGION_CLAUSES], $query->where[0]['args'][SINGLE_REGION_ARG]);
+      }      
+    }
+  }
+  
+  //
+  // Year & Month filter
+  //
+  if ($view->name == 'udi_events' || $view->name == 'udi_events_udi' || $view->name == 'udi_events_industry') {    
+    // NOTE: this filter always occupies the date element of the query
+    if (isset($_GET['y']) && isset($_GET['m'])) {
+      $query->where['date']['clauses'] = array(
+        sprintf("YEAR(node_data_field_time.field_time_value) = %d", (int)$_GET['y']),
+        sprintf("MONTH(node_data_field_time.field_time_value) = %d", (int)$_GET['m'])
+      );
+      $query->where['date']['type'] = 'AND';
+    }    
+    else if (isset($_GET['y'])) {
+      $query->where['date']['clauses'] = array(
+        sprintf("YEAR(node_data_field_time.field_time_value) = %d", (int)$_GET['y'])
+      );
+    }
+    else if (isset($_GET['m'])) {
+      $query->where['date']['clauses'] = array(
+        sprintf("MONTH(node_data_field_time.field_time_value) = %d", (int)$_GET['m'])
+      );
+    }
+    else {
+      unset($query->where['date']);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_block()
+ *
+ */
+function udi_features_events_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks['events-filter'] = array(
+        'info' => t("UDI Events Filter Block"),
+        'cache' => BLOCK_NO_CACHE,
+      );
+      
+      $blocks['events-region-filter'] = array(
+        'info' => t("UDI Events Region Filter Block"),
+        'cache' => BLOCK_NO_CACHE,
+      );
+      
+      return $blocks;
+    break;
+    
+    case 'view':
+      $block = array();
+      
+      if ($delta == 'events-filter') {
+        $block['subject'] = t('UDI Events Filter');
+        
+        // The content-type that the block support is tightly couple to the
+        // URL of the View. Currently only 'udi' and 'industry' are supported.
+        // PATH[0] must be 'events'
+        // PATH[1] must be 'udi' or 'industry'
+        $path = explode('/', $_GET['q']);
+        if ($path[0] == 'events' && $path[1] == 'udi') {
+          $block['content'] = drupal_get_form('udi_features_events_block_filter_form', array('event'));
+        }
+        else if ($path[0] == 'events' && $path[1] == 'industry') {
+          $block['content'] = drupal_get_form('udi_features_events_block_filter_form', array('industry_event'));
+        }
+        else if ($path[0] == 'events') {
+          $block['content'] = drupal_get_form('udi_features_events_block_filter_form', array('event', 'industry_event'));
+        }
+      }
+      else if ($delta == 'events-region-filter') {
+        $block['subject'] = t('UDI Events Region Filter');  
+        $block['content'] = udi_features_events_region_block_filter();
+      }
+      
+      return $block;
+    break;
+  }
+}
+
+function udi_features_events_region_block_filter() {
+  $regions = array();
+  $q = $_GET['q'];
+  $path = explode('/', $q);
+  $querystring = $_GET;
+  unset($querystring['q']);
+   
+  $sql = "
+    SELECT t.tid, t.name
+    FROM {term_data} t
+      INNER JOIN {vocabulary} v ON t.vid = v.vid
+    WHERE LOWER(v.name) LIKE LOWER('%s')
+  ";
+  
+  if ($result = db_query($sql, 'Region')) {
+    while ($row = db_fetch_object($result)) {
+      $querystring['r'] = $row->tid;      
+      $region = new stdClass();
+      $region->url = url($q, array('query' => $querystring));
+      $region->title = $row->name;
+      
+      if ($_GET['r'] == $row->tid) {
+        $region->classes = 'class="selected"';
+      }
+      
+      $regions[] = $region;
+    }
+  }
+  
+  return theme('events_region_filter', $regions);
+}
+
+function udi_features_events_block_filter_form(&$form_state, $type = array()) {
+  $year = array();
+  
+  $qs = $_GET;
+  unset($qs['q']); 
+
+  // Year values
+  $sql = "
+    SELECT MIN(YEAR(nd.field_time_value)) AS min, MAX(YEAR(nd.field_time_value)) AS max 
+    FROM {node} n
+      INNER JOIN {content_field_time} nd ON nd.nid = n.nid AND nd.vid = n.vid
+    WHERE n.type IN ('%s') AND n.status = %d
+  ";
+
+  $sql = sprintf($sql, implode("', '", $type), 1);
+  if ($result = db_fetch_object(db_query($sql))) {
+    for ($i = (int)$result->max; $i >= (int)$result->min; $i--) {
+      $year[$i] = $i;
+    }
+  }
+   
+  $form['year'] = array(
+    '#type' => 'select',
+    '#title' => t('Year'),
+    '#options' => !empty($year) ? array('all' => t('All')) + $year : array('all' => t('All')),
+    '#default_value' => $qs['y'] ? $qs['y'] : 'all'
+  );
+  
+  $form['month'] = array(
+    '#type' => 'select',
+    '#title' => t('Month'),
+    '#options' => array('all' => t('All')) + date_month_names(TRUE),
+    '#default_value' => $qs['m'] ? $qs['m'] : 'all'
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Go')
+  );
+
+  return $form;
+}
+
+function udi_features_events_block_filter_form_submit($form, &$form_state) {
+  $qs = $_GET;
+  unset($qs['q']);
+  
+  if ($form_state['values']['year'] != 'all') {
+    $qs['y'] = (int)$form_state['values']['year'];
+  }
+  else {
+    unset($qs['y']);
+  }
+
+  if ($form_state['values']['month'] != 'all') {
+    $qs['m'] = (int)$form_state['values']['month'];
+  }
+  else {
+    unset($qs['m']);
+  }
+
+  if (!empty($qs)) {
+    drupal_goto($_GET['q'], $qs);
+  }
+}

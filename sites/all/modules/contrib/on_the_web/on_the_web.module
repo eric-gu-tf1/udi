@@ -1,0 +1,164 @@
+<?php
+
+/**
+ * Implementation of hook_block().
+ */
+function on_the_web_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks['web'] = array('info' => t('On The Web'),
+      'weight' => 0, 'status' => 1, 'region' => 'right');
+    return $blocks;
+  }
+  elseif ($op == 'configure' && $delta == 'web') {
+    $services = on_the_web_get_services();
+    foreach ($services as $service => $info){
+      $form['services'][$service] = array(
+        '#type' => 'textfield',
+        '#title' => t($info['name'] . ' Page'),
+        '#default_value' => variable_get('on_the_web_' . $service . '_page', ''),
+        '#description' => t('Please paste the full url, including http://'),
+      );
+    }
+    $form['services']['feed'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show a similar icon for the RSS feed.'),
+      '#default_value' => variable_get('on_the_web_feed', FALSE),
+      '#description' => t('Checking this box his will add an RSS feed icon from this block.'),
+    );
+    $form['size'] = array(
+      '#type' => 'select',
+      '#title' => t('Icon size'),
+      '#options' => array(
+        'sm' => t('Small: 32px square'),
+        'lg' => t('Large: 64px square'),
+      ),
+      '#default_value' => array(variable_get('on_the_web_size', 'sm')),
+    );
+    $form['sitename'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Use Site Name in link titles'),
+      '#default_value' => variable_get('on_the_web_sitename', TRUE),
+      '#description' => t('Use the !sitename as the title for these links.', array('!sitename' => l(t('Site name'), 'admin/settings/site-information'))),
+    );
+    $form['target'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Open links in new windows'),
+      '#default_value' => variable_get('on_the_web_target', TRUE),
+      '#description' => t('Unchecking this box his will remove the target="_blank" attribute from these links.'),
+    );
+    return $form;
+  }
+  else if ($op == 'save' && $delta == 'web') {
+    $services = on_the_web_get_services();
+    foreach ($services as $service => $info){
+      variable_set('on_the_web_' . $service . '_page', $edit[$service]);
+    }
+    variable_set('on_the_web_feed', $edit['feed']); 
+    variable_set('on_the_web_size', $edit['size']); 
+    variable_set('on_the_web_sitename', $edit['sitename']);
+    variable_set('on_the_web_target', $edit['target']);
+  }
+  else if ($op == 'view') {
+    switch($delta) {
+      case 'web':
+        $block = array('subject' => t('Find Us On...'),
+          'content' => on_the_web_display_block_web());
+        break;
+    }
+    return $block;
+  }
+}
+
+/**
+ * Block Display
+ *
+ * @return 
+ *    Content for block.
+ */
+function on_the_web_display_block_web(){
+  $module_path = drupal_get_path('module', 'on_the_web');
+  
+  if (!(variable_get('on_the_web_sitename', TRUE) && ($name = variable_get('site_name', FALSE)))){
+    $name = t('Us');
+  }
+  
+  $services = on_the_web_get_services();
+  
+  $output = '';  
+  foreach ($services as $service => $info){
+    $page = variable_get('on_the_web_'.$service.'_page', FALSE);
+    if ($page){
+      $title = t('Find !us on !service', array('!us' => $name, '!service' => $info['name']));
+      $size = variable_get('on_the_web_size', 'sm'); 
+      $image = theme('image', $module_path.'/images/' . $size . '/' . $service . '.png', $title, $title);
+      $attributes  = array('title' => $title);
+      if (variable_get('on_the_web_target', TRUE) == TRUE) {
+        $attributes['target'] = '_blank';
+      }
+      $linked_image = l($image, $page, array('attributes' => $attributes, 'html' => TRUE));
+      $output .= theme('on_the_web_icon', $linked_image);
+    }
+  }
+  // Add the RSS feed icon
+  $feed = variable_get('on_the_web_feed', FALSE);
+  if ($feed) {
+    $link =  'rss.xml';
+    $title = t('!us RSS feed', array('!us' => $name));
+    $image = theme('image', $module_path.'/images/' . $size . '/rss.png', $title, $title);
+    $item = l($image, $link, array('attributes' => $attributes, 'html' => TRUE));
+    $output .= theme('on_the_web_icon', $item);
+  }
+  $attributes  = array('title' => t('Icons by komodomedia.com'));
+  if (variable_get('on_the_web_target', TRUE) == TRUE) {
+    $attributes['target'] = '_blank';
+  }
+
+  return $output;
+}
+
+/**
+ * Services
+ *
+ * @return 
+ *    List of services with icons.
+ */
+function on_the_web_get_services(){
+  return array(
+    'twitter' => array('name' => 'Twitter'),
+    'facebook' => array('name' => 'Facebook'),
+    'linkedin' => array('name' => 'LinkedIn'),
+    'delicious' => array('name' => 'Delicious'),
+    'flickr' => array('name' => 'Flickr'),
+    'youtube' => array('name' => 'YouTube'),
+    'itunes' => array('name' => 'iTunes'),
+    'friendfeed' => array('name' => 'FriendFeed'),
+    'myspace' => array('name' => 'MySpace'),
+    );
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function on_the_web_theme($existing, $type, $theme, $path) {
+  return array(
+    'on_the_web_icon' => array(
+      'arguments' => array('linked_image' => NULL),
+    ),
+  );
+}
+
+/**
+ * Theme function
+ *
+ * @param $linked_image
+ *    Linked icon.
+ * @return 
+ *    Linked icon with wrapper markup.
+ */
+function theme_on_the_web_icon($linked_image){
+  if ($linked_image){
+    $output = '<span class="on-the-web">' . $linked_image . '</span>';
+    return $output;
+  }
+  return;
+}

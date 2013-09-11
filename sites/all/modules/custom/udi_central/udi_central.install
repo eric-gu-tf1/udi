@@ -1,0 +1,329 @@
+<?php
+/*
+ * Add all the required install profiles.
+ *
+ * This file is only required for admin tasks, so adding this code here
+ * doesn't add any user-noticable overhead.
+ */
+
+// Set the max execution time to 15 minutes.  DO NOT REMOVE!
+ini_set('max_execution_time', 900);
+ini_set('memory_limit', '256M');
+
+if (!preg_match('/install.php/', request_uri())) {
+  $path = drupal_get_path('module', 'udi_central') . '/scripts';
+  $contents = array_slice(scandir($path), 2);
+
+  foreach ($contents as $file) {
+    $file_path = $path.'/'.$file;
+    if (preg_match('/script_[0-9]+\.inc$/', $file) && is_file($file_path)) {
+      require_once($file_path);
+    }
+  }
+}
+
+/**
+ * Delete taxonomies as defined in a list.
+ * List is the names of the vocabularies to be deleted. All associated
+ * terms will be deleted as well.
+ */
+function udi_central_uninstall_taxonomies(&$ret, $vocabulary) {
+  if (empty($vocabulary)) {
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => 'No vocabularies selected.'
+    );
+  }
+  else {
+    $sql = "SELECT v.vid FROM {vocabulary} v WHERE LOWER(v.name) LIKE LOWER('%s')";
+    foreach ($vocabulary as $key => $vocab) {
+      $vid = db_result(db_query($sql, $vocab));
+      if (taxonomy_del_vocabulary($vid) == SAVED_DELETED) {
+        $ret[] = array(
+          'success' => TRUE,
+          'query' => sprintf("Vocabulary <em>%s</em> and associated terms have been deleted successfully.", $vocab)
+        );
+      }
+      else {
+        $ret[] = array(
+          'success' => FALSE,
+          'query' => sprintf("Failed to delete Vocabulary <em>%s</em>.", $vocab)
+        );
+      }
+    }
+  }  
+}
+
+/**
+ * Uninstall module(s) as defined in a list.
+ * Note: List modules in order of dependencies. Module(s) depending on
+ * others listed first, and module(s) depended by others listed last.  
+ */
+function udi_central_uninstall_modules(&$ret, $modules) {
+  $ret = array();
+  
+  if (empty($modules)) {
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => 'No module(s) selected.'
+    );
+  }
+  else {
+    $enabled = array();
+    $disabled = array();
+    foreach ($modules as $key => $module) {      
+      if (module_exists($module)) {
+        $enabled[] = $module;        
+      }
+      else {
+        $disabled[] = $module;
+      }
+    }
+    
+    // Disable before uninstall.
+    module_disable($enabled);
+    
+    // Uninstall the module.
+    foreach ($enabled as $module) {
+      drupal_uninstall_module($module);
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => sprintf("<em>%s</em> uninstalled successfully.", $module)
+      );
+    }
+    
+    foreach ($disabled as $module) {
+      $ret[] = array(
+        'success' => FALSE,
+        'query' => sprintf("<em>%s</em> is not enabled and installed or does not exists.", $module)
+      );
+    }
+  }
+  
+  return $ret;
+}
+
+/**
+ * Delete content-type (node-type) as defined in a list.
+ * List is the machine names of the content-type to be deleted.
+ * NOTE: Content (node) will remain in system.
+ */
+function udi_central_uninstall_content(&$ret, $types) {
+  if (empty($types)) {
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => 'No content-type(s) selected.'
+    );
+  }
+  else {
+    foreach ($types as $key => $type) {
+      node_type_delete($type);
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => sprintf("Content-type <em>%s</em> and all associated content has been deleted successfully.", $type)
+      );
+    }
+  }  
+}
+
+/**
+ * Creates taxonomies as defined in a list.
+ * List must be formatted as follows:
+ * array(
+ *  'vocab' => array(
+ *    'name' => 'Example',
+ *    'multiple' => 1,
+ *    'required' => 1,
+ *    'hierarchy' => 0,
+ *    'relations' => 0,
+ *    'weight' => 0,
+ *    'module' => 'taxonomy',         // Default
+ *    'nodes' => array('node' => 1), 
+ *  ),
+ *  'terms' => array(
+ *    array(
+ *      'name' => 'Example Term',      // Name
+ *      'synonyms' => 'Druplet',       // (Optional) Synonym of this term
+ *      'parent' => 11,                // (Optional) Term ID of a parent term 
+ *      'relations' => array(15),      // (Optional) Related Term IDs
+ *      'weight' => 0                  // (Optional) Weight of the Term
+ *    )
+ *  )
+ * );
+ */
+function udi_central_install_taxonomy(&$ret, $vocabulary, $terms = array()) {
+  if (empty($vocabulary['name'])) {
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => 'No vocabulary was given.'
+    );
+  }
+  else {
+    $sql = "SELECT v.vid FROM {vocabulary} v WHERE LOWER(v.name) LIKE LOWER('%s')";
+    $vid = db_result(db_query($sql, $vocabulary['name']));
+    
+    if ($vid > 0) {
+      $vocabulary['vid'] = $vid;
+    }
+    
+    $default = array(
+      'multiple' => 0,
+      'required' => 0,
+      'hierarchy' => 0,
+      'relations' => 0,
+      'weight' => 0,
+      'module' => 'taxonomy',
+      'nodes' => array()
+    );
+    $vocabulary = array_merge($default, $vocabulary);
+    $result = taxonomy_save_vocabulary($vocabulary);
+    if ($result == SAVED_NEW || $result == SAVED_UPDATED) {
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => sprintf('Vocabulary <em>%s</em> has been created successfully.', $vocabulary['name'])
+      );
+      
+      // Create terms and add to vocabulary
+      if (empty($terms)) {
+        $ret[] = array(
+          'success' => FALSE,
+          'query' => 'No term(s) was given.'
+        );
+      }
+      else {
+        foreach ($terms as $i => $term) {
+          $term['vid'] = $vocabulary['vid'];
+          $sql = "SELECT t.tid FROM {term_data} t WHERE t.vid = %d AND LOWER(t.name) LIKE LOWER('%s')";
+          $tid = db_result(db_query($sql, (int)$vocabulary['vid'], $term['name']));
+          
+          if ($tid > 0) {
+            $term['tid'] = $tid;
+          }
+          
+          $result = taxonomy_save_term($term);
+          if ($result == SAVED_NEW || $result == SAVED_UPDATED) {
+            $ret[] = array(
+              'success' => TRUE,
+              'query' => sprintf('Term <em>%s</em> has been created successfully.', $term['name'])
+            );
+          }
+        }      
+      }
+    }
+  }  
+}
+
+/**
+ * Install all the module(s) given in a list.
+ * NOTE: Does not guarantee to install all modules correctly.
+ */
+function udi_central_install_modules(&$ret, $modules) {
+  if (empty($modules)) {
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => 'No module(s) selected.'
+    );
+  }
+  else {
+    $enabled = array();
+    $disabled = array();
+    foreach ($modules as $module) {
+      if (module_exists($module)) {
+        $enabled[] = $module;
+      }
+      else {
+        $disabled[] = $module;
+      }
+    }
+    
+    drupal_install_modules($disabled);
+    foreach ($disabled as $module) {
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => sprintf('Module <em>%s</em> has been installed.', $module)
+      );
+    }    
+  }
+}
+
+
+function udi_central_install_menu($name, $title, $description) {
+  $path = 'admin/build/menu-customize/';
+  
+  // Assign a link to the Drupal menu interface
+  $menu_name = 'menu-' . strtolower($name);
+  $link['link_title'] = $title;
+  $link['link_path'] = $path . $menu_name;
+  $link['router_path'] = $path .'%';
+  $link['module'] = 'menu';
+  $link['plid'] = db_result(db_query("SELECT mlid FROM {menu_links} WHERE link_path = '%s' AND module = '%s'", 'admin/build/menu', 'system'));
+  menu_link_save($link);
+  
+  $sql = "INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')";
+  db_query($sql, $menu_name, $title, $description);  
+}
+
+function udi_central_install_menu_parent_item($menu_name, $menu_items, $cache_name = NULL) {
+  if ($cache_name) {
+    $machine_name = 'menu_'.$cache_name;
+  }
+  else {
+    $machine_name = 'menu_'.str_ireplace('-', '_', $menu_name);
+  }
+  
+  $cache = variable_get($machine_name, array());
+  foreach ($menu_items as $key => $item) {
+    $item['menu_name'] = 'menu-'.$menu_name;
+    $item['mlid'] = $cache[$key]['mlid'] ? $cache[$key]['mlid'] : 0;
+    $item['plid'] = 0;
+    menu_link_save($item);
+    $cache[$key]['mlid'] = $item['mlid']; 
+    $cache[$key]['plid'] = $item['plid'];
+  }
+  variable_set($machine_name, $cache);
+}
+
+function udi_central_install_node(&$ret, $title, $attributes = array(), $nid = NULL) {
+  if (!is_string($title) || empty($title)) {
+    $ret[] = array(
+      'success' => FALSE,
+      'query' => 'Invalid Node title given.'
+    );
+    
+    return NULL;
+  }
+  else {
+    $node = new stdClass();
+    $node->title = $title;
+    $node->nid = $nid;
+    $node->uid = !empty($attributes['uid']) ? (int)$attributes['uid'] : 1;
+    $node->body = !empty($attributes['body']) ? $attributes['body'] : "This is a placeholder node. Please edit this node!";
+    $node->type = !empty($attributes['type']) ? $attributes['type'] : 'page';
+    $node->status = !empty($attributes['status']) ? (int)$attributes['status'] : 1;
+    
+    if (!empty($attributes['vid'])) {
+      $node->vid = (int)$attributes['vid'];
+    }
+    
+    if (!empty($attributes['path'])) {
+      $node->path = $attributes['path'];
+    }
+    
+    node_save($node);
+    
+    if ($node->nid > 0) {
+      $ret[] = array(
+        'success' => TRUE,
+        'query' => sprintf("Node <em>%s</em> has been created.", $node->title)
+      );
+    }
+    else {
+      $ret[] = array(
+        'success' => FALSE,
+        'query' => sprintf("Failed to create Node <em>%s</em>.", $node->title)
+      );
+    }
+    
+    return $node;
+  }
+}

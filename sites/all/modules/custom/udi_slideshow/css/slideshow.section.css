@@ -1,0 +1,99 @@
+/*
+ * SECTION SLIDESHOW
+ */
+#slide-banner-holder {
+	background: #eee;
+	width: 1006px;
+	height: 330px;
+	position: relative;
+	margin: 0;
+}
+
+#slide-banner-holder.manual {
+	background: none;
+	padding: 0;
+	width: 1006px;
+	height: 330px;
+	position: relative;
+	margin: 0;
+}
+
+#slide-banner-holder ul#feature-banner {
+	margin: 0;
+	padding: 0;
+}
+
+
+#slide-banner-holder ul#feature-banner li { 
+	list-style-image: none;
+	list-style: none;
+}
+
+
+#slide-banner-holder div.photo-desc	{
+	padding:0; 
+	width: 350px; 
+	position:absolute;
+	top:30px;
+	left:30px;
+	z-index: 1; 
+	color: white; 
+	font-size: 14px;
+	font-weight: normal;
+}
+
+#slide-banner-holder div.photo-desc	h1 {
+	font-size:50px;
+	font-weight:normal;
+	margin:5px 0 20px;
+	padding:0;
+	line-height:50px;
+	width:900px
+}
+
+/* nav */
+div.third-level-nav{
+	position:absolute;
+	bottom:10px;
+	right:15px;
+	z-index:99;
+}
+
+div.third-level-nav li {
+	list-style-type:none;
+	float:left;
+	margin:0;
+	padding:0;
+}
+
+div.third-level-nav li a {
+	display:block;
+	background:#333;
+	color:white;
+	padding:5px 10px;
+	font-size:18px;
+	text-decoration:none;
+	line-height:18px;
+}
+
+div.third-level-nav li a.selected,
+div.third-level-nav li.active-trail a,
+div.third-level-nav li a:hover {
+	background-color:#d3ae44;
+	color:#333;
+}
+
+.has-banner h1.page-title {
+	position:absolute;
+	left:30px;
+	top:160px;
+	z-index:9;
+	color:white;
+}
+
+.has-banner .breadcrumb {
+	position:absolute;
+	left:30px;
+	top:215px;
+	z-index:9;	
+}

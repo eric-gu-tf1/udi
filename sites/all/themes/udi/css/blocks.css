@@ -1,0 +1,418 @@
+/* $Id: blocks.css,v 1.4 2009/11/05 11:05:39 johnalbin Exp $ */
+
+/**
+ * @file
+ * Block Styling
+ */
+
+
+.block /* Block wrapper */ {
+  margin-bottom: 1em;
+  border: 2px solid #efefef;
+  background: #fff url(../images/title-banner-line.png) left top repeat-x;
+}
+
+.block.region-odd /* Zebra striping for each block in the region */ {
+}
+
+.block.region-even /* Zebra striping for each block in the region */ {
+}
+
+.block.odd /* Zebra striping independent of each region */ {
+}
+
+.block.even /* Zebra striping independent of each region */ {
+}
+
+.region-count-1 /* Incremental count for each block in the region */ {
+}
+
+.count-1 /* Incremental count independent of each region */ {
+}
+
+.block h2.title /* Block title */ {
+  font-size: 17pt;
+  font-weight: lighter;
+  color: #247e9f;
+  padding-left: 15px;
+  padding-top: 6px;
+  text-transform: uppercase;
+}
+
+.block h2.title a /* Block title that is a clickable link */ {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  text-transform: none;
+}
+
+.block .content /* Block's content wrapper */ {
+	padding-left: 15px;
+	padding-right: 15px;
+	padding-bottom: 15px;
+}
+
+#block-aggregator-category-1 /* Block for the latest news items in the first category */ {
+}
+
+#block-aggregator-feed-1 /* Block for the latest news items in the first feed */ {
+}
+
+#block-block-1 /* First administrator-defined block */ {
+}
+
+#block-blog-0 /* "Recent blog posts" block */ {
+}
+
+#block-book-0 /* "Book navigation" block for the current book's table of contents */ {
+}
+
+#block-comment-0 /* "Recent comments" block */ {
+}
+
+#block-forum-0 /* "Active forum topics" block */ {
+}
+
+#block-forum-1 /* "New forum topics" block */ {
+}
+
+#block-menu-primary-links /* "Primary links" block */ {
+}
+
+#block-menu-secondary-links /* "Secondary links" block */ {
+}
+
+#block-node-0 /* "Syndicate" block for primary RSS feed */ {
+}
+
+#block-poll-0 /* "Most recent poll" block */ {
+}
+
+#block-profile-0 /* "Author information" block for the profile of the page's author */ {
+}
+
+#block-search-0 /* "Search form" block */ {
+}
+
+#block-statistics-0 /* "Popular content" block */ {
+}
+
+#block-user-0 /* "User login form" block */ {
+  border: none;
+  background: none;
+}
+
+#block-user-1 /* "Navigation" block for Drupal navigation menu */ {
+}
+
+#block-user-2 /* "Who's new" block for a list of the newest users */ {
+}
+
+#block-user-3 /* "Who's online" block for a list of the online users */ {
+}
+
+/* Added by me */
+
+.block .content h2 {
+  padding-left: 0px;
+  padding-top: 0px;
+}
+
+.block .content .content h2 {
+  padding-top: 0px;
+}
+
+.block .content .content {
+  padding-left: 0px;
+  padding-top: 0px;
+}
+
+/* Front page blocks */
+
+.front #block-views-news-block_1,
+.front #block-views-news-block_2,
+.front #frontleft {
+    width: 628px;
+    float: left;
+}
+
+.front #block-poll-0
+.front #frontright {
+    width: 296px;
+    float: right;
+}
+
+.front #block-block-4 {
+    width: 296px;
+    float: right;
+}
+
+.front #block-block-7 {
+    width: 296px;
+    float: right;
+}
+
+.front #block-views-Companies-block_1 {
+	width: 296px;
+	float: right;
+	clear: right;
+}
+
+.join-now .field-content a{
+    padding: 15px;
+    margin: 15px;
+    background: url(../images/join-now.png) left center no-repeat;
+    display: block;
+    color: transparent;
+
+}
+
+.front #block-views-udi_chapter-block_2 {
+	clear: right;
+	float: right;
+	width: 296px;
+}
+
+.front #block-block-8 {
+	clear: right;
+	float: right;
+	width: 296px;
+}
+
+.front #block-block-8 .content {
+	width: 276px;
+}
+
+.front #block-block-8 #twtr-widget-1 .twtr-doc, #twtr-widget-1 .twtr-hd a, #twtr-widget-1 h3, #twtr-widget-1 h4, #twtr-widget-1 .twtr-popular {
+	background: none !important;
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+.front #block-block-8 .twtr-ft div {
+	visibility: hidden;
+	padding: 0;
+}
+.front #block-block-8 .content {
+	padding: 0;
+	
+}
+
+
+/* Make the highlighted content region narrower to fit the image nodequeue */
+
+#block-ddblock-3 {
+    width: 938px;
+    height: 356px;
+    border-color: #2780a0;
+}
+
+/* Remove the margins & padding to make the image fit snugly */
+
+#views-cycle-nodequeue_1-block {
+    margin: 0;
+    padding: 0;
+}
+
+/* This styles and positions the front page container navigation buttons */
+
+#views-cycle-nodequeue_1-block-nav {
+    position: relative;
+    top: -70px;
+    z-index: 10;
+}
+
+.views-cycle-thumb-0 {
+    background: url(../images/Container-tab-dormant.png) center center no-repeat;
+}
+
+.views-cycle-thumb-1 {
+    background: url(../images/Container-tab-dormant.png) center center no-repeat;
+}
+
+.views-cycle-thumb-2 {
+    background: url(../images/Container-tab-dormant.png) center center no-repeat;
+}
+
+.views-cycle-thumb-0 a {
+	color: white;
+    display: block;
+}
+
+.views-cycle-thumb-1 a {
+	color: white;
+    display: block;
+}
+
+.views-cycle-thumb-2 a {
+	color: white;
+    display: block;
+}
+
+.activeSlide {
+    background: url(../images/Container-tab-active.png) center center no-repeat;
+}
+
+/* This applies CSS to the sidebar images block used on many static pages */
+
+#block-views-who_we_are_images-block_1, #block-views-who_we_are_images-block_2, #block-views-who_we_are_images-block_3,
+	#block-views-who_we_are_images-block_4, #block-views-who_we_are_images-block_5, #block-views-who_we_are_images-block_6,
+	#block-views-who_we_are_images-block_7, #block-views-who_we_are_images-block_8, #block-views-who_we_are_images-block_9,
+	#block-views-who_we_are_images-block_10, #block-views-who_we_are_images-block_11 {
+	border: none;
+	background: none;
+}
+
+.imagefield-field_image {
+	margin-bottom: 5px;
+}
+
+/* Format the login blocks displayed when not logged in. */
+
+
+/* This is the login block */
+#block-block-2 {
+    width: 440px;
+    float: left;
+}
+
+#edit-name-1 {
+    width: 400px;
+}
+
+#edit-pass-1 {
+    width: 400px;
+}
+
+#block-block-2 .content {
+	padding-top: 5px;
+    padding-left: 15px;
+    padding-bottom: 20px;
+}
+
+
+/* This is the register block */
+#block-block-3 {
+    width: 440px;
+    float: right;
+}
+
+#block-block-3 p {
+	margin-bottom: 0;
+}
+
+#block-block-3 .content{
+    padding-top: 5px;
+}
+
+/* Join Now Button CSS class */
+
+#block-block-3 img {
+	padding-right: 15px;
+	padding-bottom: 13px;
+}
+
+.front #block-block-4 {
+    width: 296px;
+    float: right;
+}
+
+.front #block-block-4 .content {
+	padding-top: 5px;
+}
+
+.front #block-block-4 img {
+	padding-right: 15px;
+}
+
+.front #block-block-4 p {
+	margin-bottom: 0;
+}
+
+/* This puts the 'Member Login' link beside the search box when no one is logged in */
+
+#block-user-0 {
+	float: right;
+    position: relative;
+    top:10px;
+}
+
+#block-user-0 .content {
+	padding-right: 0;
+}
+
+#block-logintoboggan-0 {
+	float: right;
+	background: none;
+	border: none;
+	position: relative;
+    top: 10px;
+}
+
+#block-logintoboggan-0 .content {
+    padding-right: 0;
+}
+
+/* Format the poll block content */
+
+.block-poll .content {
+padding: 15px;
+}
+
+/* Format the twitter link */
+
+#block-on_the_web-0 {
+background: none;
+border: none;
+float: right;
+padding-top: 5px;
+}
+
+/* Override the poll submit buttom to allow for padding at the bottom */
+
+.poll .vote-form {
+  text-align: center;
+  padding-bottom: 30px;
+}
+
+/* Override the image blocks individually to prevent padding */
+
+#block-views-who_we_are_images-block_1 .content, #block-views-who_we_are_images-block_2 .content, #block-views-who_we_are_images-block_3 .content,
+	#block-views-who_we_are_images-block_4 .content, #block-views-who_we_are_images-block_5 .content, #block-views-who_we_are_images-block_6 .content,
+	#block-views-who_we_are_images-block_7 .content, #block-views-who_we_are_images-block_8 .content, #block-views-who_we_are_images-block_9 .content,
+	#block-views-who_we_are_images-block_10 .content, #block-views-who_we_are_images-block_11 .content {
+	padding-left: 0;
+}
+
+/* Format the copyright block in the footer */
+
+#block-block-5 .content {
+	text-align: center;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+/* Fix padding on the municipality images in the sidebar on municipality pages */
+
+#block-views-municipality-block_4 img {
+	padding-top: 15px;
+	padding-bottom: 15px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.item-list ul.views-cycle-pager li {
+    list-style-type: none;
+	height: 29px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 0;
+	padding-top: 7px;
+	width: 150px;
+	text-align: center;
+}
+
+/* Format the on-the-web Facebook & Twitter link images */
+
+.on-the-web {
+margin-left: 10px;
+}

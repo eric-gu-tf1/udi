@@ -1,0 +1,113 @@
+/**
+ * HTML5 style sheet
+ *
+ * layout.css contains site wide layout elements.
+ *
+ */
+
+
+/**
+ * Container wrapper
+ * 
+ * Add fixwidth or fluidwidth class to container.
+ */ 
+/*.fixwidth footer,*/
+.fixwidth #container-inner {
+	width: 1006px; /* edit to change the width of the page */
+	margin: 0 auto;
+	padding: 0 5px;
+}
+
+.fluidwidth footer,
+.fluidwidth #container-inner {
+	min-width:1006px; /*same as the fixwidth */
+	max-width:1300px; /*really depends on your content */
+	margin: 0 auto;
+}
+
+
+/**
+ * Layout Rules
+ */
+#content {
+  float: left;
+  width: 100%;
+  margin-right: -100%;
+  padding: 0;
+}
+
+.inner {
+	padding: 5px;
+}
+
+.sidebar {
+  float: left;
+}
+
+#sidebar-right {
+  float: right;
+}
+
+#footer {
+  float: none;
+  clear: both;
+}
+
+
+/**
+ * Sidebars Widths
+ *
+ * Changing the width of the sidebars is dead easy, just change the
+ * values below corresponding to the sidebar you want to modify.
+ * Make sure you keep negative values as negative values.
+ * For example, if I want to increase the width of the left sidebar
+ * to 300px, I would have to change each '190' to '300'. 
+ */
+.two-sidebars .center,
+.sidebar-left .center {
+  margin-left: 239px;     /* LEFT value */
+}
+#sidebar-left {
+  width: 239px;           /* LEFT value */
+	margin-right: -239px;    /* negative LEFT value */
+}
+.two-sidebars .center,
+.sidebar-right .center {
+  margin-right: 260px;    /* RIGHT value */
+}
+#sidebar-right {
+  width: 239px;           /* RIGHT value */
+}
+
+
+/**
+ * Fixed footer
+ *
+ * CSS for fixed footer at the bottom. Add fixfooter class to container.
+ * Not supported in IE6
+ */
+body {
+	min-height: 100%;
+} 
+ 
+.fixfooter {
+	height: 100%;
+}
+
+.fixfooter #container-inner {
+	position: relative;
+	margin-bottom: -46px; 	/* Height of footer */
+	min-height: 100%;
+}
+
+.fixfooter footer {
+	position:relative;
+	line-height: 46px; 			/* Height of footer */
+	height: 46px;	  				/* Height of footer */
+}
+
+.fixfooter .clearfooter {
+	clear: both;
+  height: 26px; 					/* Height of footer */
+  margin-top: 26px; 			/* Height of footer */
+}

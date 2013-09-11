@@ -1,0 +1,31 @@
+div.toboggan-container {
+  text-align: center;
+}
+
+div.toboggan-login-link-container {
+  text-align: left;
+}
+
+div.toboggan-login-link-container a {
+  text-decoration: none;
+  color: #97a0a5;
+  position: relative;
+  left: 650px;
+  top: -205px;
+}
+
+div.toboggan-block-message {
+  text-align: left;
+}
+
+div.user-login-block {
+  text-align: left;
+    color: #97a0a5;
+  position: relative;
+  left: 650px;
+  top: -205px;
+}
+
+div.user-login-block a {
+  text-align: left;
+}

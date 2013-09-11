@@ -1,0 +1,8 @@
+name = "UDI Slideshow"
+description = "Provide the image slideshow featuring on the home page and section pages."
+dependencies[] = udi_central
+
+core = "6.x"
+version = "6.x-1.0"
+package = "UDI"
+project = "udi_slideshow"

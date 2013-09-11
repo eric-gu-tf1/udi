@@ -1,0 +1,22 @@
+#udi-central-module-modules-form {
+  margin: 0 0 16px 0;
+}
+
+#udi-central-module-modules-form #links {
+  margin: -8px 0 16px 0;
+}
+
+#udi-central-module-modules-form #check-all,
+#udi-central-module-modules-form #uncheck-all {
+  margin: 0 8px 0 0;
+  font-size: 12px;
+}
+
+#udi-central-module-modules-form #edit-submit {
+  display: block;
+}
+
+#udi-central-module-modules-form #modules .op {
+  padding: 0 6px;
+  width: 48px;
+}

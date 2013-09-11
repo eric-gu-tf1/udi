@@ -1,0 +1,6 @@
+/**
+ * Fix the admin page in IE6
+ */
+div.admin .left, div.admin .right {
+	width:46%;
+}

@@ -1,0 +1,1254 @@
+<?php
+
+define('ATTENDEE_STATUS_PENDING', 0);
+define('ATTENDEE_STATUS_ATTEND', 1);
+define('ATTENDEE_STATUS_NOT_ATTEND', 2);
+
+/**
+ * Implementation of hook_menu()
+ *
+ */
+function udi_events_menu() {
+  $items['node/%node/gallery'] = array(
+    'title' => 'Gallery',
+    'page callback' => 'udi_events_node_edit_page',
+    'page arguments' => array(1),
+    'access callback' => 'udi_events_access',
+    'access arguments' => array(1, 'edit event gallery'),
+    'weight' => 2,
+    'type' => MENU_LOCAL_TASK
+  );
+
+  $items['node/%node/video'] = array(
+    'title' => 'Video',
+    'page callback' => 'udi_events_node_edit_page',
+    'page arguments' => array(1),
+    'access callback' => 'udi_events_access',
+    'access arguments' => array(1, 'edit event video'),
+    'weight' => 3,
+    'type' => MENU_LOCAL_TASK
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_menu_alter()
+ *
+ */
+function udi_events_menu_alter(&$items) {
+  $items['cart']['access arguments'] = array('access shopping cart');
+}
+
+/**
+ * Implementation of hook_init()
+ *
+ */
+function udi_events_init() {
+  global $user;
+  if ($user->uid == 0 && (arg('0') == 'cart' && count(arg()) == 1)) {
+    // Anonymous user doesn't have Cart access
+    uc_cart_empty(uc_cart_get_id(FALSE));
+    drupal_goto('<front>');
+  }
+}
+
+/**
+ * Implementation of hook_perm()
+ *
+ */
+function udi_events_perm() {
+  return array('access shopping cart', 'edit event gallery', 'edit event video');
+}
+
+/**
+ * Implementation of hook_access()
+ *
+ */
+function udi_events_access($node, $perm) {
+  if ($node->type == 'event') {
+    return user_access($perm);;
+  }
+  return FALSE;
+}
+
+/**
+ * Implementation of hook_theme()
+ *
+ */
+function udi_events_theme($existing, $type, $theme, $path) {
+  $themes['event_attachment'] = array(
+    'path' => $path.'/templates',
+    'template' => 'attachment',
+    'arguments' => array('idn' => NULL, 'class' => NULL, 'attachments' => NULL),
+  );
+
+  $themes['event_tickets_form'] = array(
+    'path' => $path.'/templates',
+    'template' => 'tickets-form',
+    'arguments' => array('tickets' => NULL),
+  );
+
+  $themes['event_price'] = array(
+    'path' => $path.'/templates',
+    'template' => 'price',
+    'arguments' => array('label' => NULL, 'price' => NULL, 'sign' => NULL, 'dollar' => NULL),
+  );
+
+  $themes['event_attendee_info'] = array(
+    'path' => $path.'/templates',
+    'template' => 'attendee',
+    'arguments' => array('attendees' => NULL, 'message' => NULL),
+  );
+
+  return $themes;
+}
+
+/**
+ * Implementation of hook_theme_registry_alter()
+ */
+function udi_events_theme_registry_alter(&$theme_registry) {
+  $module_path = drupal_get_path('module', 'udi_events');
+
+  // customer invoice template
+  $theme_registry['uc_order']['theme paths'][] = $module_path.'/templates';
+  $theme_registry['uc_order']['include files'][] = $module_path.'/includes/themes.inc';
+  $theme_registry['uc_order']['preprocess functions'][] = 'udi_events_preprocess_uc_order';
+}
+
+/**
+ * Implementation of hook_form_alter()
+ *
+ */
+function udi_events_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+
+  if ($form_id == 'event_node_form') {
+    // Event ticket pricing form
+    udi_events_ticket_form($form, $form_state);
+
+    // Generic item for both Gallery and Video
+    if (arg(2) == 'gallery' || arg(2) == 'video') {
+      $form['title']['#access'] = FALSE;
+      $form['body_field']['#access'] = FALSE;
+      $form['taxonomy']['#access'] = FALSE;
+      $form['comment_settings']['#access'] = FALSE;
+      $form['menu']['#access'] = FALSE;
+      $form['revision_information']['#access'] = FALSE;
+      $form['path']['#access'] = FALSE;
+      $form['author']['#access'] = FALSE;
+      $form['options']['#access'] = FALSE;
+      $form['buttons']['preview']['#access'] = FALSE;
+      $form['buttons']['delete']['#access'] = FALSE;
+
+      $form['field_event_image']['#access'] = FALSE;
+      $form['field_event_location']['#access'] = FALSE;
+      $form['field_events_videos']['#access'] = FALSE;
+      $form['field_events_files_presentation']['#access'] = FALSE;
+      $form['field_event_gallery']['#access'] = FALSE;
+      $form['field_file_upload_advanced']['#access'] = FALSE;
+      $form['field_logo']['#access'] = FALSE;
+
+      $form['custom_breadcrumbs']['#access'] = FALSE;
+      $form['path_redirect']['#access'] = FALSE;
+      $form['ticket_price']['#access'] = FALSE;
+
+      // disable validation to bypass date error on Video/Gallery page
+      $form['field_time'][0]['#element_validate'] = array();
+      $form['field_time'][0]['#access'] = FALSE;
+    }
+
+    if (arg(2) == 'edit') {
+      // Gallery form does not show here
+      $form['field_event_gallery']['#access'] = FALSE;
+      $form['field_events_videos']['#access'] = FALSE;
+    }
+    else if (arg(2) == 'gallery') {
+      $form['field_event_gallery']['#access'] = TRUE;
+    }
+    else if (arg(2) == 'video') {
+      $form['field_events_videos']['#access'] = TRUE;
+    }
+  }
+
+  // Checkout form
+  if ($form_id == 'uc_cart_checkout_form') {
+    // Fill in billing information from Buyer
+    // There should always be 1 item in cart. If there is 2 we pick
+    // only the first 1.
+    $items = uc_cart_get_contents();
+    if ($items[0]->nid == $_SESSION['event_buyer_information']['tnid'] && $items[0]->vid == $_SESSION['event_buyer_information']['tvid']) {
+      $session = $_SESSION['event_buyer_information'];
+      $form['panes']['billing']['billing_first_name']['#default_value'] = $session['firstname'];
+      $form['panes']['billing']['billing_last_name']['#default_value'] = $session['lastname'];
+      $form['panes']['billing']['billing_company']['#default_value'] = $session['company'];
+      $form['panes']['billing']['billing_phone']['#default_value'] = $session['phone'];
+
+      // Add email to Customer email address field
+      if ($user->uid == 0) {
+        $form['panes']['customer']['#description'] = t("Your order information and confirmation will be sent to the following e-mail address:");
+        $form['panes']['customer']['primary_email']['#default_value'] = $session['email'];
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_checkout_pane()
+ *
+ */
+function udi_events_checkout_pane() {
+  $panes[] = array(
+    'id' => 'attendees',
+    'callback' => 'udi_events_checkout_pane_attendees',
+    'title' => t('Attendees Information'),
+    'desc' => t("Display the Attendees to be registered for the event."),
+    'weight' => 0,
+    'process' => FALSE,
+    'collapsible' => FALSE,
+  );
+
+  return $panes;
+}
+
+/**
+ * Implementation of hook_uc_message().
+ */
+//function udi_events_uc_message() {
+//  $messages['checkout_instructions'] = '';
+//  $messages['review_instructions'] = t("Your order is almost complete. Please review the details below and click 'Submit order' if all the information is correct.  You may use the 'Back' button to make changes to your order if necessary.");
+//  $messages['completion_message'] = t('Your order is complete! Your order number is [order-id].');
+//  $messages['completion_logged_in'] = t('Thank you for your purchase!');
+//  $messages['completion_existing_user'] = t("Thank you your purchase!");
+//  $messages['completion_new_user'] = '';
+//  $messages['continue_shopping'] = t('<a href="[site-url]">Return to the front page.</a>');
+//
+//  return $messages;
+//}
+
+/**
+ * Implementation of hook_order_pane()
+ *
+ */
+function udi_events_order_pane() {
+  $panes[] = array(
+    'id' => 'attendees',
+    'callback' => 'udi_events_order_pane_attendees',
+    'title' => t('Attendee Information'),
+    'desc' => t('Displays the Attendees information of an event.'),
+    'class' => 'abs-left',
+    'weight' => 5.1,
+    'show' => array('view', 'edit', 'invoice', 'customer'),
+  );
+
+  return $panes;
+}
+
+/**
+ * Implementation of hook_uc_checkout_complete()
+ *
+ */
+function udi_events_uc_checkout_complete($order, $account) {
+  $session = $_SESSION['event_buyer_information'];
+  if (!empty($order) && !empty($session)) {
+    // Add Order ID onto Attendee Information Table
+    $sql = "
+      UPDATE {events_attendees}
+      SET order_id = %d
+      WHERE session_id = '%s' AND timestamp = %d AND tnid = %d
+    ";
+
+    foreach ($order->products as $product) {
+      db_query($sql, $order->order_id, $session['session_id'], $session['timestamp'], $product->nid);
+    }
+
+    // Order process is complete.
+    // Buyer information stored in Session can be removed
+    unset($_SESSION['event_buyer_information']);
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi()
+ *
+ */
+function udi_events_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  //udi_central_debug($node);
+  if ($node->type == 'event') {
+    switch ($op) {
+      case 'load':
+        // Load all ticket type (product) associated with this event node
+        $products = array();
+        $valid_type = array('event_price_non_member', 'event_price_member', 'event_price_corporate');
+
+        $sql = "
+          SELECT n.type, es.field_event_seats_value AS seat, p.*
+          FROM {node} n
+            INNER JOIN {content_field_price_to_event_ref} pe ON pe.vid = n.vid AND pe.nid = n.nid
+            LEFT JOIN {content_field_event_price_weight} pw ON pw.vid = n.vid AND pw.nid = n.nid
+            LEFT JOIN {content_field_event_seats} es ON es.vid = n.vid AND es.nid = n.nid
+            LEFT JOIN {uc_products} p ON p.vid = n.vid AND p.nid = n.nid
+          WHERE pe.field_price_to_event_ref_nid = %d
+            AND n.type IN ('%s')
+            AND n.status = %d
+          ORDER BY pw.field_event_price_weight_value ASC
+        ";
+
+        $sql = sprintf($sql, $node->nid, implode("', '", $valid_type), 1);
+        if ($result = db_query($sql)) {
+          while ($row = db_fetch_object($result)) {
+            $node->tickets[$row->type] = array(
+              'enid' => $node->nid,
+              'evid' => $node->vid,
+              'nid' => $row->nid,
+              'vid' => $row->vid,
+              'model' => $row->model,
+              'seats' => $row->seat,
+              'sell_price' => $row->sell_price,
+              'default_qty' => $row->default_qty
+            );
+          }
+        }
+      break;
+
+      case 'prepare':
+        drupal_add_css(drupal_get_path('module', 'udi_events').'/css/events.css');
+      break;
+
+      case 'insert':
+      case 'update':
+        udi_events_product_save($node);
+      break;
+
+      case 'view':
+        $node->display = new stdClass();
+
+        // Stage 1 displays full event detail with ticket purchase form (if applicable)
+        // Stage 2 displays limited event detail and buyer attendee form
+        udi_events_node_display_core($node);
+
+        if ($_GET['step'] == 2 && $_GET['en'] == $node->nid && $_GET['ev'] == $node->vid && isset($_GET['tn']) && isset($_GET['tv'])) {
+          if (uc_cart_get_total_qty() > 0) {
+            drupal_set_message(t("Please fill in your information and attendees information in the fields below..."), 'warning');
+            udi_events_node_display_buyer_attendee($node);
+          }
+          else {
+            // Redirect buy to event root page
+            drupal_goto($_GET['q']);
+          }
+        }
+        else {
+          udi_events_node_display_additional($node);
+          udi_events_node_display_tickets($node);     // Ticket Purchasing form
+        }
+      break;
+    }
+  }
+}
+
+/**
+ * Displays the Buyer Attendee information form
+ * for Step 2 of the ticket purchasing process
+ *
+ */
+function udi_events_node_display_buyer_attendee(&$node) {
+  $event['nid'] = intval($_GET['en']);
+  $event['vid'] = intval($_GET['ev']);
+  $ticket['nid'] = intval($_GET['tn']);
+  $ticket['vid'] = intval($_GET['tv']);
+  foreach ($node->tickets as $type => $info) {
+    if ($info['nid'] == $ticket['nid'] && $info['vid'] == $ticket['vid']) {
+      $ticket['seats'] = $info['seats'] > 1 ? $info['seats'] : 1;
+    }
+  }
+
+  // Get selected ticket price
+  $sql = "
+    SELECT p.sell_price, n.type
+    FROM {uc_products} p
+      INNER JOIN {node} n ON n.nid = p.nid AND n.vid = p.vid
+    WHERE p.nid = %d AND p.vid = %d
+  ";
+
+  $product = db_fetch_object(db_query($sql, $ticket['nid'], $ticket['vid']));
+  if ($product->type == 'event_price_member') {
+    $label = 'Member Price:';
+  }
+  else if ($product->type == 'event_price_non_member') {
+    $label = 'Non-Member Price:';
+  }
+  else if ($product->type == 'event_price_corporate') {
+    $label = 'Corporate Table Price:';
+  }
+  else
+    $label = 'Ticket Price';
+
+  $node->display->buyer_attend['price'] = theme('event_price', $label, number_format(floatval($product->sell_price), 2), '$', 'CAD');
+  $node->display->buyer_attend['form'] = drupal_get_form('udi_events_ticket_buyer_attendee_form', intval($_GET['n']), $event, $ticket);
+}
+
+/**
+ * Displays the Ticket Purchasing form
+ *
+ * NOTE: Event that is expired, i.e. TO date passed NOW, will not
+ * display the form.
+ */
+function udi_events_node_display_tickets(&$node) {
+  $date = date_make_date($node->field_time[0]['value2'], $node->field_time[0]['timezone']);
+  $strnow = strtotime('now');
+  $strto = intval(strtotime($node->field_time[0]['value2'])) + intval($date->getOffset());
+  $disabled = intval($node->field_event_disable_ticket[0]['value']);
+
+  if (!empty($node->tickets) && ($strnow <= $strto) && !$disabled) {
+    $tickets = array();
+    foreach ($node->tickets as $type => $info) {
+      // Title
+      if ($type == 'event_price_non_member')
+        $label = 'Non-Member Price:';
+      else if ($type == 'event_price_member')
+        $label = 'Member Price:';
+      else if ($type == 'event_price_corporate')
+        $label = 'Corporate Table Price:';
+      else
+        $label = 'Ticket Price';
+
+      // Price
+      $tickets[$type]['display']['price'] = theme('event_price', $label, number_format(floatval($info['sell_price']), 2), '$', 'CAD');
+
+      // Buy form
+      $tickets[$type]['form'] = drupal_get_form('udi_events_ticket_purchase_form', $info);
+    }
+    $node->display->tickets = theme('event_tickets_form', $tickets);
+  }
+}
+
+/**
+ * Displays core elements on Event
+ *
+ * NOTE: All display elements are stored in $node->display
+ */
+function udi_events_node_display_core(&$node) {
+  // Calicon & Event Time (Only need FROM time as defined in Wireframes)
+  if (!empty($node->field_time[0])) {
+    $date = date_make_date($node->field_time[0]['value'], $node->field_time[0]['timezone']);
+    $datetime_from = $node->field_time[0]['value'];
+    $timezone = $date->getOffset();
+
+    $strtime = (int)strtotime($datetime_from) + (int)$timezone;
+    $node->display->calicon['year'] = date('Y', $strtime);
+    $node->display->calicon['month'] = date('M', $strtime);
+    $node->display->calicon['day'] = date('d', $strtime);
+    $node->display->calicon['full'] = date('F j, Y', $strtime);
+    $node->display->time = date('g:iA', $strtime);
+  }
+
+  // Body
+  if (module_exists('wysiwyg_imageupload')) {
+    $node->display->body = _wysiwyg_imageupload_filter_process($node->content['body']['#value']);
+  }
+  else {
+    $node->display->body = $node->content['body']['#value'];
+  }
+
+
+  // Event Logo
+  if (!empty($node->field_event_image[0])) {
+    $filepath = $node->field_event_image[0]['filepath'];
+    $node->display->logo = theme('imagecache', 'events_logo_wide', $filepath);
+  }
+
+  // Files/Documents
+  if (!empty($node->field_file_upload_advanced[0])) {
+    $items = array();
+    foreach ($node->field_file_upload_advanced as $file) {
+      if ($file['data']['description'] != '') {
+        $items[]['item'] = theme('filefield_icon', $file).l($file['data']['description'], $file['filepath']);
+      }
+      else {
+        $items[]['item'] = theme('filefield_icon', $file).l($file['filename'], $file['filepath']);
+      }
+    }
+    $node->display->files = theme('event_attachment', 'files', 'attachment', $items);
+  }
+
+  // Event Sponsors
+  if (!empty($node->field_logo[0])) {
+    $items = array();
+    foreach ($node->field_logo as $delta => $image) {
+      $items[]['item'] = theme('imagecache', 'logo_company_normal', $image['filepath']);
+    }
+    $node->display->sponsors = theme('event_attachment', 'sponsors', 'attachment', $items);
+  }
+}
+
+/**
+ * Displays additional elements on Event
+ *
+ * NOTE: All display elements are stored in $node->display
+ */
+function udi_events_node_display_additional(&$node) {
+  // Event Presentations
+  if (!empty($node->field_events_files_presentation[0])) {
+    $items = array();
+    foreach ($node->field_events_files_presentation as $file) {
+      if ($file['data']['description'] != '') {
+        $items[]['item'] = theme('filefield_icon', $file).l($file['data']['description'], $file['filepath']);
+      }
+      else {
+        $items[]['item'] = theme('filefield_icon', $file).l($file['filename'], $file['filepath']);
+      }
+    }
+    $node->display->presentations = theme('event_attachment', 'presentations', 'attachment', $items);
+  }
+
+  // Event Gallery
+  if (!empty($node->field_event_gallery[0])) {
+    $items = array();
+    foreach ($node->field_event_gallery as $image) {
+      if ($image['list'] == '1') {
+        $thumb = theme('imagecache', 'events_gallery_thumb', $image['filepath']);
+        $caption = $image['data']['description'];
+        $attr = array('rel' => sprintf("lightbox[event][%s]", $caption));
+        $items[]['item'] = l($thumb, file_create_url($image['filepath']), array('html' => TRUE, 'attributes' => $attr));
+      }
+    }
+    $node->display->gallery = theme('event_attachment', 'gallery', 'attachment', $items);
+  }
+
+  // Event Video(s)
+  if (!empty($node->field_events_videos[0])) {
+    $items = array();
+    $field_type = 'field_events_videos';
+    $system_types = _content_type_info();
+    $field = $system_types['fields'][$field_type];
+    $field['widget'] = $system_types['content types']['event']['fields'][$field_type]['widget'];
+
+    foreach ($node->field_events_videos as $video) {
+      if ($video['embed']) {
+        $items[]['item'] = theme('emvideo_video_video', $field, $video, 'emvideo_embed', $node);
+      }
+    }
+
+    $node->display->videos = theme('event_attachment', 'videos', 'attachment', $items);
+  }
+}
+
+/**
+ * Creates the Ticket Purchasing Form
+ *
+ */
+function udi_events_ticket_purchase_form($form_state, &$product) {
+  $form = array();
+  $form['#validate'][] = 'udi_events_ticket_purchase_form_validate';
+  $form['#submit'][] = 'udi_events_ticket_purchase_form_submit';
+
+  $form['enid'] = array('#id' => 'edit-enid-'.$product['enid'], '#type' => 'hidden', '#value' => $product['enid']);
+  $form['evid'] = array('#id' => 'edit-evid-'.$product['enid'], '#type' => 'hidden', '#value' => $product['evid']);
+  $form['nid'] = array('#id' => 'edit-nid-'.$product['nid'], '#type' => 'hidden', '#value' => $product['nid']);
+  $form['vid'] = array('#id' => 'edit-vid-'.$product['nid'], '#type' => 'hidden', '#value' => $product['vid']);
+  $form['model'] = array('#id' => 'edit-model-'.$product['nid'], '#type' => 'hidden', '#value' => $product['model']);
+
+  $form['quantity'] = array(
+    '#id' => 'edit-quantity-'.$product['nid'],
+    '#type' => 'textfield',
+    '#default_value' => 0,
+    '#field_suffix' => 'ticket(s)',
+    '#size' => 5,
+    '#maxlength' => 2,
+  );
+
+  $form['submit'] = array(
+    '#id' => 'edit-submit-'.$product['nid'],
+    '#type' => 'submit',
+    '#value' =>  t('Buy'),
+    '#attributes' => array('class' => 'ticket-add-to-cart'),
+  );
+
+  if ($product['seats'] > 1) {
+    $form['info'] = array(
+      '#id' => 'note',
+      '#type' => 'item',
+      '#value' => t("Note: 1 ticket reserves for <strong>%d</strong> person/seats.", array('%d' => $product['seats']))
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Form submission handler for udi_events_ticket_purchase_form().
+ *
+ * @see udi_events_ticket_purchase_form()
+ */
+function udi_events_ticket_purchase_form_submit($form, &$form_state) {
+  // ALWAYS clear the cart first before adding new item
+  uc_cart_empty(uc_cart_get_id(FALSE));
+
+  $data = $form_state['clicked_button']['#post'];
+  uc_cart_add_item($data['nid'], $data['quantity'], NULL, NULL, NULL);
+
+  // Redirect to stage 2 - Collect buyer and attendee information
+  $query = array('step' => 2, 'n' => $data['quantity'], 'en' => $data['enid'], 'ev' => $data['evid'], 'tn' => $data['nid'], 'tv' => $data['vid']);
+  drupal_goto($_GET['q'], $query);
+}
+
+/**
+ * Allows only positive, numeric quantities.
+ *
+ * @see udi_events_ticket_purchase_form()
+ */
+function udi_events_ticket_purchase_form_validate($form, &$form_state) {
+  if (!is_numeric($form_state['values']['quantity']) || intval($form_state['values']['quantity']) <= 0) {
+    form_set_error('quantity', t('You have entered an invalid quantity.'));
+  }
+}
+
+/**
+ * Creates the Buyer information and Attendee Information form
+ *
+ */
+function udi_events_ticket_buyer_attendee_form($form_state, $quantity = 1, $event = array(), $ticket = array()) {
+  $form['enid'] = array('#type' => 'hidden', '#value' => $event['nid']);
+  $form['evid'] = array('#type' => 'hidden', '#value' => $event['vid']);
+  $form['tnid'] = array('#type' => 'hidden', '#value' => $ticket['nid']);
+  $form['tvid'] = array('#type' => 'hidden', '#value' => $ticket['vid']);
+
+  // Buyer Information
+  $form['buyer'] = array(
+    '#prefix' => '<div id="buyer"><h4>Please fill in your information in the fields below</h4>',
+    '#suffix' => '</div>',
+    '#tree' => TRUE,
+  );
+
+  $form['buyer']['bfirst'] = array(
+    '#type' => 'textfield',
+    '#title' => 'First Name',
+    '#maxlength' => 16,
+    '#size' => 16,
+    //'#required' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $form['buyer']['blast'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Last Name',
+    '#maxlength' => 16,
+    '#size' => 16,
+    //'#required' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $form['buyer']['bemail'] = array(
+    '#type' => 'textfield',
+    '#title' => 'E-mail',
+    '#size' => 16,
+    //'#required' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $form['buyer']['bphone'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Phone',
+    '#description' => 'Enter your 10-digit phone number.',
+    '#maxlength' => 10,
+    '#size' => 16,
+    //'#required' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $form['buyer']['bcompany'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Company',
+    '#size' => 16,
+    '#maxlength' => 64,
+    '#tree' => TRUE,
+  );
+
+  $form['buyer']['quantity'] = array(
+    '#type' => 'markup',
+    '#value' => '<p>'.t("You are buying a total of <strong>@n</strong> ticket(s). If the quantity is incorrect, please click <em>Cancel</em>, and start over.", array('@n' => uc_cart_get_total_qty())).'</p>'
+  );
+
+  $form['markup'] = array(
+    '#value' => '<br><br>',
+  );
+
+  // Attendee Information
+  $form['attendee'] = array(
+    '#value' => '<p>'.t("Please include yourself in the Attendee form, if you are attending the event.").'</p>',
+    '#prefix' => '<div id="attendees"><h4>Please fill in attendees information in the fields below</h4>',
+    '#suffix' => '</div><div class="clear"></div>',
+    '#tree' => TRUE,
+  );
+
+  // By default 1 attendee field
+  $form['attendee'][0] = array('#tree' => TRUE, '#prefix' => '<div class="attendee clearfix">', '#suffix' => '</div>');
+  $form['attendee'][0]['afirst'] = array('#tree' => TRUE, '#type' => 'textfield', '#maxlength' => 16, '#size' => 16, '#title' => 'First Name');
+  $form['attendee'][0]['alast'] = array('#tree' => TRUE, '#type' => 'textfield', '#maxlength' => 16, '#size' => 16, '#title' => 'Last Name');
+  $form['attendee'][0]['acompany'] = array('#tree' => TRUE, '#type' => 'textfield', '#size' => 16, '#maxlength' => 64, '#title' => 'Company');
+
+  // Get cart quantity
+  $quantity = uc_cart_get_total_qty();
+  if ($quantity > 0) {
+    for ($i = 1; $i < $quantity*$ticket['seats']; $i++) {
+      $form['attendee'][$i] = array('#tree' => TRUE, '#prefix' => '<div class="attendee">', '#suffix' => '</div>');
+      $form['attendee'][$i]['afirst'] = array('#tree' => TRUE, '#type' => 'textfield', '#maxlength' => 16, '#size' => 16, '#title' => 'First Name');
+      $form['attendee'][$i]['alast'] = array('#tree' => TRUE, '#type' => 'textfield', '#maxlength' => 16, '#size' => 16, '#title' => 'Last Name');
+      $form['attendee'][$i]['acompany'] = array('#tree' => TRUE, '#type' => 'textfield', '#size' => 16, '#maxlength' => 64, '#title' => 'Company');
+    }
+  }
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Continue',
+  );
+
+  $form['cancel'] = array(
+    '#type' => 'markup',
+    '#value' => l('Cancel', $_GET['q']),
+  );
+
+  return $form;
+}
+
+/**
+ * Validation handler for Buyer/Attendee Form
+ *
+ */
+function udi_events_ticket_buyer_attendee_form_validate($form, &$form_state) {
+  if (uc_cart_get_total_qty() == 0) {
+    drupal_get_messages(t("Invalid ticket selected. Please start from the beginning."), 'error');
+    drupal_goto($_GET['q']);
+  }
+
+  // TODO: Validate Buyer information
+}
+
+/**
+ * Form Submit handler for Buyer/Attendee Form
+ *
+ */
+function udi_events_ticket_buyer_attendee_form_submit($form, &$form_state) {
+  $en = $form_state['values']['enid'];
+  $ev = $form_state['values']['evid'];
+  $tn = $form_state['values']['tnid'];
+  $tv = $form_state['values']['tvid'];
+  $buyer = $form_state['values']['buyer'];
+  $attendees = $form_state['values']['attendee'];
+  $attendees_saved = 0;
+  $attendees_count = count($attendees);
+  $time = time();
+
+  // Save buyer information
+  $_SESSION['event_buyer_information'] = array(
+    'timestamp' => $time,
+    'session_id' => session_id(),
+    'tvid' => $tv,
+    'tnid' => $tn,
+    'enid' => $en,
+    'evid' => $ev,
+    'firstname' => $buyer['bfirst'],
+    'lastname' => $buyer['blast'],
+    'company' => $buyer['bcompany'],
+    'email' => $buyer['bemail'],
+    'phone' => $buyer['bphone']
+  );
+
+  // Save attendee information
+  $sql = "
+    INSERT INTO {events_attendees}
+    (session_id, timestamp, enid, evid, tnid, tvid, firstname, lastname, company, status)
+    VALUES
+    ('%s', '%s', %d, %d, %d, %d, '%s', '%s', '%s', %d)
+  ";
+  foreach ($attendees as $info) {
+    $info['afirst'] = !empty($info['afirst']) ? $info['afirst'] : 'TBA';
+    db_query($sql, session_id(), $time, $en, $ev, $tn, $tv, $info['afirst'], $info['alast'], $info['acompany'], ATTENDEE_STATUS_PENDING);
+    $attendees_saved += db_affected_rows();
+  }
+
+  if ($attendees_saved == $attendees_count) {
+    // Redirect to UberCart checkout
+    drupal_goto('cart/checkout');
+  }
+  else {
+    // Error occurred redirect back to event root
+    drupal_set_message(t("An error has occurred. Information cannot be saved at this time. Please try again later. If the problem persists please contact the site administrator."), 'error');
+    unset($_SESSION['event_buyer_information']);
+    uc_cart_empty(uc_cart_get_id(FALSE));
+    drupal_goto($_GET['q']);
+  }
+}
+
+
+//
+//
+// ADMIN SECTION
+//
+//
+
+/**
+ * Displays the Attendee Information on Checkout Pane
+ *
+ */
+function udi_events_checkout_pane_attendees($op) {
+  module_load_include('inc', 'udi_events', 'includes/pages');
+
+  switch ($op) {
+    case 'view':
+      $items = uc_cart_get_contents();
+      if ($items[0]->nid == $_SESSION['event_buyer_information']['tnid'] && $items[0]->vid == $_SESSION['event_buyer_information']['tvid']) {
+        $session = $_SESSION['event_buyer_information'];
+        $attendees = udi_events_get_attendees($session['session_id'], $session['timestamp'], $session['tnid'], $session['tvid']);
+        $message = t("A total of <strong>%num</strong> Attendee(s) are to be registered for this event.", array('%num' => count($attendees)));
+
+        $output['attend_info'] = array(
+          '#value' => theme('event_attendee_info', $attendees, $message),
+        );
+      }
+
+      return array('contents' => $output, 'next-button' => FALSE);
+    break;
+
+    case 'review':
+      $output = array();
+      $items = uc_cart_get_contents();
+      if ($items[0]->nid == $_SESSION['event_buyer_information']['tnid'] && $items[0]->vid == $_SESSION['event_buyer_information']['tvid']) {
+        $session = $_SESSION['event_buyer_information'];
+        $attendees = udi_events_get_attendees($session['session_id'], $session['timestamp'], $session['tnid'], $session['tvid']);
+        $message = t("A total of <strong>%num</strong> Attendee(s) are to be registered for this event.", array('%num' => count($attendees)));
+        $output[] = theme('event_attendee_info', $attendees, $message);
+      }
+
+      return $output;
+    break;
+  }
+}
+
+/**
+ * Displays the Attendee Information on Order Pane
+ *
+ */
+function udi_events_order_pane_attendees($op, $order) {
+  module_load_include('inc', 'udi_events', 'includes/pages');
+
+  switch ($op) {
+    case 'view':
+    case 'invoice':
+    case 'customer':
+      $attendees = udi_events_get_attendees_by_order_id($order->order_id);
+      $message = t("A total of <strong>%num</strong> Attendee(s) are registered for the event.", array('%num' => count($attendees)));
+      return theme('event_attendee_info', $attendees, $message);
+    break;
+  }
+}
+
+/**
+ * Event Ticket Pricing and Stock level form
+ *
+ */
+function udi_events_ticket_form(&$form, &$form_state) {
+  $sql = "
+    SELECT p.sell_price AS price, s.stock, es.field_event_seats_value AS seat
+    FROM {node} n
+      LEFT JOIN {content_field_price_to_event_ref} pe ON pe.vid = n.vid AND pe.nid = n.nid
+      LEFT JOIN {content_field_event_seats} es ON es.vid = n.vid AND es.nid = n.nid
+      LEFT JOIN {uc_products} p ON p.vid = pe.vid AND p.nid = pe.nid
+      LEFT JOIN {uc_product_stock} s ON p.model = s.sku AND p.nid = s.nid
+    WHERE n.type = '%s' AND pe.field_price_to_event_ref_nid = %d
+  ";
+
+  $form['ticket_price'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Ticket Pricing Option(s)'),
+    '#description' => "Only Non-Member, Member, and Corporate Table pricing are available. Enter a value for a Price option that is greater than 0.00 to have the option enable. Otherwise, leave a price option at 0.00 to disable it. Stock level governs how many tickets can be sold, leaving the option at 0 to disable the option. Stock level must be greater than 0 to have it enabled. <strong>NOTE</strong>: once a price option is set, it cannot be unset.",
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#weight' => 5,
+    '#prefix' => '<div id="field-ticket-price-form">',
+    '#suffix' => '</div>',
+  );
+
+  $non_member = db_fetch_object(db_query($sql, 'event_price_non_member', $form['#node']->nid));
+  $form['ticket_price']['non_member_price'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Non-Member Price',
+    '#field_prefix' => '$',
+    '#description' => '',
+    '#default_value' => $non_member->price > 0 ? number_format($non_member->price, 2) : '0.00',
+    '#size' => 8,
+    '#maxlength' => 10,
+    '#prefix' => '<div class="ticket-group">',
+  );
+
+  $form['ticket_price']['non_member_stock'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Stock',
+    '#description' => 'Maximum stock level: 9999',
+    '#default_value' => $non_member->stock ? $non_member->stock : 0,
+    '#size' => 8,
+    '#maxlength' => 10,
+  );
+
+  $form['ticket_price']['non_member_seat'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Number of Seat(s)',
+    '#description' => 'Number of seat(s) that a ticket represents. E.g. A team ticket may represents a seat of 2. Default is <em>1</em>.',
+    '#default_value' => $non_member->seat ? $non_member->seat : 1,
+    '#size' => 3,
+    '#maxlength' => 2,
+    '#suffix' => '</div>',
+  );
+
+  $member = db_fetch_object(db_query($sql, 'event_price_member', $form['#node']->nid));
+  $form['ticket_price']['member_price'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Member Price',
+    '#field_prefix' => '$',
+    '#description' => '',
+    '#default_value' => $member->price > 0 ? number_format($member->price, 2) : '0.00',
+    '#size' => 8,
+    '#maxlength' => 10,
+    '#prefix' => '<div class="ticket-group">',
+  );
+
+  $form['ticket_price']['member_stock'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Member Stock',
+    '#description' => 'Maximum stock level: 9999',
+    '#default_value' => $member->stock ? $member->stock : 0,
+    '#size' => 8,
+    '#maxlength' => 10,
+  );
+
+  $form['ticket_price']['member_seat'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Number of Seat(s)',
+    '#description' => 'Number of seat(s) that a ticket represents. E.g. A team ticket may represents a seat of 2. Default is <em>1</em>.',
+    '#default_value' => $member->seat ? $member->seat : 1,
+    '#size' => 3,
+    '#maxlength' => 2,
+    '#suffix' => '</div>',
+  );
+
+  $corporate = db_fetch_object(db_query($sql, 'event_price_corporate', $form['#node']->nid));
+  $form['ticket_price']['corporate_price'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Corporate Table Price',
+    '#field_prefix' => '$',
+    '#description' => '',
+    '#default_value' => $corporate->price > 0 ? number_format($corporate->price, 2) : '0.00',
+    '#size' => 8,
+    '#maxlength' => 10,
+    '#prefix' => '<div class="ticket-group">',
+  );
+
+  $form['ticket_price']['corporate_stock'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Corporate Stock',
+    '#description' => 'Maximum stock level: 9999',
+    '#default_value' => $corporate->stock ? $corporate->stock : 0,
+    '#size' => 8,
+    '#maxlength' => 10,
+  );
+
+  $form['ticket_price']['corporate_seat'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Number of Seat(s)',
+    '#description' => 'Number of seat(s) that a ticket represents. E.g. A team ticket may represents a seat of 2. Default is <em>1</em>.',
+    '#default_value' => $corporate->seat ? $corporate->seat : 1,
+    '#size' => 3,
+    '#maxlength' => 2,
+    '#suffix' => '</div>',
+  );
+
+  $form['#validate'][] = 'udi_events_ticket_form_validate';
+}
+
+/**
+ * Event Ticket Pricing and Stock level Form Validate
+ *
+ */
+function udi_events_ticket_form_validate($form, &$form_state) {
+  // Price level
+  if (!is_numeric($form_state['values']['non_member_price']) || $form_state['values']['non_member_price'] < 0) {
+    form_set_error('non_member_price', t("Invalid Non-Member price. Price must be a number and positive."));
+  }
+
+  if (!is_numeric($form_state['values']['member_price']) || $form_state['values']['member_price'] < 0) {
+    form_set_error('member_price', t("Invalid Member price. Price must be a number and positive."));
+  }
+
+  if (!is_numeric($form_state['values']['corporate_price']) || $form_state['values']['corporate_price'] < 0) {
+    form_set_error('corporate_price', t("Invalid Corporate price. Price must be a number and positive."));
+  }
+
+  // Stock level
+  if (!is_numeric($form_state['values']['non_member_stock']) || $form_state['values']['non_member_stock'] < 0) {
+    form_set_error('non_member_stock', t("Invalid Non-Member stock level. Stock must be a number and positive."));
+  }
+
+  if (!is_numeric($form_state['values']['member_stock']) || $form_state['values']['member_stock'] < 0) {
+    form_set_error('member_stock', t("Invalid Member stock level. Stock must be a number and positive."));
+  }
+
+  if (!is_numeric($form_state['values']['corporate_stock']) || $form_state['values']['corporate_stock'] < 0) {
+    form_set_error('corporate_stock', t("Invalid Corporate stock level. Stock must be a number and positive."));
+  }
+
+  // Seat level
+  if (!is_numeric($form_state['values']['non_member_seat']) || $form_state['values']['non_member_seat'] < 1) {
+    form_set_error('non_member_seat', t("Invalid Non-Member Number of Seat(s). A seat must be a number and greater than 1."));
+  }
+
+  if (!is_numeric($form_state['values']['member_seat']) || $form_state['values']['member_seat'] < 1) {
+    form_set_error('member_seat', t("Invalid Member Number of Seat(s). A seat must be a number and greater than 1."));
+  }
+
+  if (!is_numeric($form_state['values']['corporate_seat']) || $form_state['values']['corporate_seat'] < 1) {
+    form_set_error('corporate_seat', t("Invalid Corporate Number of Seat(s). A seat must be a number and greater than 1."));
+  }
+}
+
+/**
+ * Generate an additional node edit form
+ *
+ */
+function udi_events_node_edit_page(&$node) {
+  module_load_include('inc', 'node', 'node.pages');
+  return node_page_edit($node);
+}
+
+/**
+ * Save Event Ticket (product) Price and Stock level
+ *
+ */
+function udi_events_product_save(&$node) {
+  $sql = "
+    SELECT pe.vid, pe.nid, es.field_event_seats_value AS seat
+    FROM {node} n
+      LEFT JOIN {content_field_price_to_event_ref} pe ON pe.nid = n.nid AND pe.vid = n.vid
+      LEFT JOIN {content_field_event_seats} es ON es.vid = n.vid AND es.nid = n.nid
+    WHERE n.type = '%s' AND pe.field_price_to_event_ref_nid = %d
+    ORDER BY pe.vid DESC
+  ";
+
+  //
+  // Create or Update a Non-Member Product
+  //
+  if (!empty($node->non_member_price) && $node->non_member_price > 0) {
+    // Check for existing price product.
+    // If existed we can update the product node;
+    // Otherwise create a new product node.
+    //$sql = "SELECT nm.vid, nm.nid FROM {content_type_event_price_non_member} nm WHERE nm.field_price_to_event_ref_nid = %d";
+    $reference = db_fetch_object(db_query($sql, 'event_price_non_member', $node->nid));
+
+    if (!empty($reference->vid)) {
+      // Existing product
+      $product = node_load(array('vid' => $reference->vid, 'nid' => $reference->nid));
+
+      // Change product price (and stock)
+      $product->sell_price = round(floatval(trim($node->non_member_price)), 2);
+
+      // Change number of seats
+      $product->field_event_seats[0]['value'] = trim($node->non_member_seat);
+
+      node_save($product);
+      if ($node->non_member_stock > 0) {
+        db_query("UPDATE {uc_product_stock} SET stock = %d, active = %d WHERE sku = '%s'", intval($node->non_member_stock), 1, $product->model);
+      }
+      else {
+        db_query("UPDATE {uc_product_stock} SET stock = %d, active = %d WHERE sku = '%s'", 0, 0, $product->model);
+      }
+    }
+    else {
+      $params = array(
+        'title' => 'Ticket Non-Member - '.strip_tags($node->title),
+        'event_nid' => $node->nid,
+        'uid' => $node->uid,
+        'model' => udi_events_generate_sku($node, 'sku', 'nm'),
+        'sell_price' => round(floatval(trim($node->non_member_price)), 2),
+        'sort' => 3,
+        'seats' => trim($node->non_member_seat)
+      );
+
+      $product = udi_events_product_create('event_price_non_member', $params);
+
+      // Stock value 0 indicates Stock Level is not active
+      $active = $node->non_member_stock > 0 ? 1 : 0;
+      $stock = "INSERT INTO {uc_product_stock} (sku, nid, active, stock, threshold) VALUES ('%s', %d, %d, %d, %d)";
+      db_query($stock, $params['model'], $product->nid, $active, intval($node->non_member_stock), 10);
+    }
+  }
+
+  //
+  // Create or Update a Member Product
+  //
+  if (!empty($node->member_price) && $node->member_price > 0) {
+    //$sql = "SELECT nm.vid, nm.nid FROM {content_type_event_price_member} nm WHERE nm.field_price_to_event_ref_nid = %d";
+    $reference = db_fetch_object(db_query($sql, 'event_price_member', $node->nid));
+
+    if (!empty($reference->vid)) {
+      // Existing product
+      $product = node_load(array('vid' => $reference->vid, 'nid' => $reference->nid));
+
+      // Change product price
+      $product->sell_price = round(floatval(trim($node->member_price)), 2);
+
+      // Change number of seats
+      $product->field_event_seats[0]['value'] = trim($node->member_seat);
+
+      node_save($product);
+      if ($node->member_stock > 0) {
+        db_query("UPDATE {uc_product_stock} SET stock = %d, active = %d WHERE sku = '%s'", intval($node->member_stock), 1, $product->model);
+      }
+      else {
+        db_query("UPDATE {uc_product_stock} SET stock = %d, active = %d WHERE sku = '%s'", 0, 0, $product->model);
+      }
+    }
+    else {
+      $params = array(
+        'title' => 'Ticket Member - '.strip_tags($node->title),
+        'event_nid' => $node->nid,
+        'uid' => $node->uid,
+        'model' => udi_events_generate_sku($node, 'sku', 'me'),
+        'sell_price' => round(floatval(trim($node->member_price)), 2),
+        'sort' => 1,
+        'seats' => trim($node->member_seat)
+      );
+
+      $product = udi_events_product_create('event_price_member', $params);
+
+      // Stock value 0 indicates Stock Level is not active
+      $active = $node->member_stock > 0 ? 1 : 0;
+      $stock = "INSERT INTO {uc_product_stock} (sku, nid, active, stock, threshold) VALUES ('%s', %d, %d, %d, %d)";
+      db_query($stock, $params['model'], $product->nid, $active, intval($node->member_stock), 10);
+    }
+  }
+
+  //
+  // Create or Update a Corporate Product
+  //
+  if (!empty($node->corporate_price) && $node->corporate_price > 0) {
+    $reference = db_fetch_object(db_query($sql, 'event_price_corporate', $node->nid));
+
+    if (!empty($reference->vid)) {
+      // Existing product
+      $product = node_load(array('vid' => $reference->vid, 'nid' => $reference->nid));
+
+      // Change product price (and stock)
+      $product->sell_price = round(floatval(trim($node->corporate_price)), 2);
+
+      // Change number of seats
+      $product->field_event_seats[0]['value'] = trim($node->corporate_seat);
+
+      node_save($product);
+      if ($node->corporate_stock > 0) {
+        db_query("UPDATE {uc_product_stock} SET stock = %d, active = %d WHERE sku = '%s'", intval($node->corporate_stock), 1, $product->model);
+      }
+      else {
+        db_query("UPDATE {uc_product_stock} SET stock = %d, active = %d WHERE sku = '%s'", 0, 0, $product->model);
+      }
+    }
+    else {
+      $params = array(
+        'title' => 'Ticket Corporate - '.strip_tags($node->title),
+        'event_nid' => $node->nid,
+        'uid' => $node->uid,
+        'model' => udi_events_generate_sku($node, 'sku', 'co'),
+        'sell_price' => round(floatval(trim($node->corporate_price)), 2),
+        'sort' => 2,
+        'seats' => trim($node->corporate_seat)
+      );
+
+      $product = udi_events_product_create('event_price_corporate', $params);
+
+      // Stock value 0 indicates Stock Level is not active
+      $active = $node->corporate_stock > 0 ? 1 : 0;
+      $stock = "INSERT INTO {uc_product_stock} (sku, nid, active, stock, threshold) VALUES ('%s', %d, %d, %d, %d)";
+      db_query($stock, $params['model'], $product->nid, $active, intval($node->corporate_stock), 10);
+    }
+  }
+
+  return TRUE;
+}
+
+/**
+ * Create an UberCart Product
+ *
+ * @param $type
+ *  Name of the Node type
+ * @param $params
+ *  An array of UberCart product attributes.
+ *  Key 'title' and 'model' is required.
+ * @return
+ *  A fully built UberCart product node.
+ */
+function udi_events_product_create($type, $params = array()) {
+  if (empty($params['model']) || empty($params['event_nid']) || empty($params['title'])) {
+    return FALSE;
+  }
+
+  $product = new stdClass();
+  $product->type = $type;
+  $product->uid = $params['uid'] ? $params['uid'] : 1;
+  $product->status = 1;
+  $product->title = $params['title'];
+  $product->model = $params['model'];
+  $product->list_price = $params['list_price'] ? $params['list_price'] : 0;
+  $product->cost = $params['cost'] ? $params['cost'] : 0;
+  $product->sell_price = $params['sell_price'] ? $params['sell_price'] : 0;
+  $product->weight = $params['weight'] ? $params['weight'] : 0;
+  $product->weight_units = $params['weight_units'] ? $params['weight_units'] : 'lb';
+  $product->length = $params['length'] ? $params['length'] : 0;
+  $product->width = $params['width'] ? $params['width'] : 0;
+  $product->height = $params['height'] ? $params['height'] : 0;
+  $product->length_units = $params['length_units'] ? $params['length_units'] : 'in';
+  $product->pkg_qty = $params['pkg_qty'] ? $params['pkg_qty'] : 1;
+  $product->default_qty = $params['default_qty'] ? $params['default_qty'] : 1;
+  $product->shippable = $params['shippable'] ? $params['shippable'] : 0;
+
+  $product->field_price_to_event_ref[0]['nid'] = intval($params['event_nid']);
+  $product->field_event_seats[0]['value'] = $params['seats'] ? intval($params['seats']) : 1;
+  $product->field_event_price_weight[0]['value'] = $params['sort'] ? $params['sort'] : 0;
+
+  node_save($product);
+
+  return $product;
+}
+
+/**
+ * Generate a SKU ID given by attributes found within a Node.
+ *
+ * @param &$node
+ *  Reference to a Node.
+ *  If the Node has Taxonomy Region attached then the first 3 letters from each
+ *  Term name will be used.
+ *  NID is used and will be padded to a pre-defined length.
+ * @param $prefix
+ *  Optional prefix to be attached to the head. Default to 'SKU-'.
+ * @param $suffix
+ *  Optional suffix to be attached to the end.
+ */
+function udi_events_generate_sku(&$node, $prefix = 'sku', $suffix = '') {
+  $model = '';
+  $model = $prefix.'-';
+
+  if (!empty($node->taxonomy)) {
+    foreach ($node->taxonomy as $vid => $terms) {
+      $region = db_result(db_query("SELECT LOWER(v.name) FROM {vocabulary} v WHERE v.vid = %d", $vid));
+      if ($region == 'region') {
+        foreach ($terms as $tid) {
+          $term = taxonomy_get_term((int)$tid);
+          $model .= substr($term->name, 0, 3);
+        }
+      }
+    }
+  }
+
+  $model .= (string)$node->nid;
+  $model = str_pad($model, 16, '0');
+  $model .= $suffix;
+
+  return strtoupper($model);
+}

@@ -1,0 +1,11 @@
+name=Comment Moderate
+description=Enables comment moderation on individual nodes.
+core=6.x
+dependencies[]=comment
+
+; Information added by drupal.org packaging script on 2011-02-25
+version = "6.x-1.x-dev"
+core = "6.x"
+project = "node_comment_moderate"
+datestamp = "1298619758"
+

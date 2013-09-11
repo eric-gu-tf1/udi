@@ -1,0 +1,9 @@
+name = "UDI Central"
+description = "Central administration area for UDI specific site configuration. Provides a manner to apply update scripts."
+
+core = "6.x"
+php = "5"
+
+version = "6.x-1.0"
+package = "UDI"
+project = "udi_central"
