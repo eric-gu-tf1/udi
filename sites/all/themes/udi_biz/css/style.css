@@ -1010,3 +1010,34 @@ h2.comments {
 .view-udi-contacts .views-field-body {
   margin-top: 12px;
 }
+
+/**
+ * Flickr Photo Gallery
+ * */
+div.flickr-photoset div.flickr-photoset-img {
+  float: left;
+  margin: 0 10px 20px;
+}
+
+div.flickr-photoset, div.flickr-photoset-meta, div.field-field-season {
+  float: left;
+  clear: both;
+}
+
+.page-top .gallery {
+  display: block;
+  float: right;
+  margin-top: 13px;
+}
+
+.flickr-photoset {
+  padding-left: 20px;
+}
+.flickr-photoset-img {
+  width: 150px;
+  height:  150px;
+  overflow: hidden;
+}
+.flickr-photoset-meta {
+  display: none;
+}
