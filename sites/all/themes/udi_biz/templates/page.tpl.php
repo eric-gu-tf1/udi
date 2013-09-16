@@ -59,8 +59,9 @@ global $user;
             <li class="twitter"><a href="https://twitter.com/udibc" target="_blank">Twitter</a></li>
             <li class="youtube"><a href="http://www.youtube.com/UDIPacific" target="_blank">Youtube</a></li>
           </ul>
-          <a  class="gallery" href="/gallery">Gallery</a>
+
           <?php if ($contact_us): ?><p class="contact-btn fright"><?php echo $contact_us ?></p><?php endif ?>
+          <a  class="gallery" href="/gallery">Gallery</a>
           <?php if ($dashboard): ?><p class="dashboard-btn fright"><?php echo $dashboard ?></p><?php endif ?>
           <?php if ($logout): ?><p class="logout-btn fright"><?php echo $logout ?></p><?php endif ?>
 
