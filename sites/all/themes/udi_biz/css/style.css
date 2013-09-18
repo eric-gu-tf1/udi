@@ -524,8 +524,12 @@ ul.header-social li.youtube a {background-image:url(../images/socialmedia/youtub
   background:url(../images/icon-comments.png) right center no-repeat;
 }
 
-.logout-btn, .dashboard-btn {
+.logout-btn, .dashboard-btn, .gallery-btn {
   padding:5px 0 5px 5px;
+}
+
+.gallery-btn {
+  margin-right: 5px
 }
 
 /**
@@ -1027,7 +1031,7 @@ div.flickr-photoset, div.flickr-photoset-meta, div.field-field-season {
 .page-top .gallery {
   display: block;
   float: right;
-  margin-top: 13px;
+  margin-top: 5px;
 }
 
 .flickr-photoset {

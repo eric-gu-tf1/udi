@@ -61,7 +61,7 @@ global $user;
           </ul>
 
           <?php if ($contact_us): ?><p class="contact-btn fright"><?php echo $contact_us ?></p><?php endif ?>
-          <a  class="gallery" href="/gallery">Gallery</a>
+          <p class="gallery-btn fright"><a href="/gallery">Gallery</a></p>
           <?php if ($dashboard): ?><p class="dashboard-btn fright"><?php echo $dashboard ?></p><?php endif ?>
           <?php if ($logout): ?><p class="logout-btn fright"><?php echo $logout ?></p><?php endif ?>
 
