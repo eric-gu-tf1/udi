@@ -84,6 +84,17 @@ function udi_features_content_type_node_info() {
       'min_word_count' => '0',
       'help' => '',
     ),
+    'gallery' => array(
+      'name' => t('Photo Gallery'),
+      'module' => 'features',
+      'description' => '',
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'has_body' => '1',
+      'body_label' => t('Body'),
+      'min_word_count' => '0',
+      'help' => '',
+    ),
     'image' => array(
       'name' => t('Image'),
       'module' => 'features',

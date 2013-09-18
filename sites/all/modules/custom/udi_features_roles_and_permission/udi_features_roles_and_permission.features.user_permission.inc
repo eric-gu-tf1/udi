@@ -322,6 +322,14 @@ function udi_features_roles_and_permission_user_default_permissions() {
     ),
   );
 
+  // Exported permission: administer flickr
+  $permissions['administer flickr'] = array(
+    'name' => 'administer flickr',
+    'roles' => array(
+      '0' => 'admin',
+    ),
+  );
+
   // Exported permission: administer google plusone
   $permissions['administer google plusone'] = array(
     'name' => 'administer google plusone',
@@ -1946,6 +1954,15 @@ function udi_features_roles_and_permission_user_default_permissions() {
   // Exported permission: edit field_files_package_date
   $permissions['edit field_files_package_date'] = array(
     'name' => 'edit field_files_package_date',
+    'roles' => array(
+      '0' => 'admin',
+      '1' => 'staff',
+    ),
+  );
+
+  // Exported permission: edit field_flickr_photo
+  $permissions['edit field_flickr_photo'] = array(
+    'name' => 'edit field_flickr_photo',
     'roles' => array(
       '0' => 'admin',
       '1' => 'staff',
@@ -3824,6 +3841,17 @@ function udi_features_roles_and_permission_user_default_permissions() {
     ),
   );
 
+  // Exported permission: view all flickr photos
+  $permissions['view all flickr photos'] = array(
+    'name' => 'view all flickr photos',
+    'roles' => array(
+      '0' => 'admin',
+      '1' => 'anonymous user',
+      '2' => 'authenticated user',
+      '3' => 'staff',
+    ),
+  );
+
   // Exported permission: view all orders
   $permissions['view all orders'] = array(
     'name' => 'view all orders',
@@ -4098,8 +4126,21 @@ function udi_features_roles_and_permission_user_default_permissions() {
     'name' => 'view field_files_package_date',
     'roles' => array(
       '0' => 'admin',
-      '1' => 'board of directors',
-      '2' => 'staff',
+      '1' => 'anonymous user',
+      '2' => 'authenticated user',
+      '3' => 'board of directors',
+      '4' => 'staff',
+    ),
+  );
+
+  // Exported permission: view field_flickr_photo
+  $permissions['view field_flickr_photo'] = array(
+    'name' => 'view field_flickr_photo',
+    'roles' => array(
+      '0' => 'admin',
+      '1' => 'anonymous user',
+      '2' => 'authenticated user',
+      '3' => 'staff',
     ),
   );
 
@@ -4606,6 +4647,17 @@ function udi_features_roles_and_permission_user_default_permissions() {
     'name' => 'view imagecache uc_thumbnail',
     'roles' => array(
       '0' => 'admin',
+    ),
+  );
+
+  // Exported permission: view own flickr photos
+  $permissions['view own flickr photos'] = array(
+    'name' => 'view own flickr photos',
+    'roles' => array(
+      '0' => 'admin',
+      '1' => 'anonymous user',
+      '2' => 'authenticated user',
+      '3' => 'staff',
     ),
   );
 

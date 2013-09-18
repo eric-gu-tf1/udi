@@ -1943,6 +1943,64 @@ Yes|is UDI Sponsor?',
     ),
   );
 
+  // Exported field: field_flickr_photo
+  $fields['gallery-field_flickr_photo'] = array(
+    'field_name' => 'field_flickr_photo',
+    'type_name' => 'gallery',
+    'display_settings' => array(
+      'weight' => '31',
+      'parent' => '',
+      'label' => array(
+        'format' => 'hidden',
+      ),
+      'teaser' => array(
+        'format' => 's',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'm',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '2' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '3' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'token' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'flickrfield',
+    'required' => '1',
+    'multiple' => '1',
+    'module' => 'flickrfield',
+    'active' => '1',
+    'widget' => array(
+      'default_value' => array(
+        '0' => array(
+          'type' => 'photo_id',
+          'id' => '',
+          'nsid' => '100885354@N02',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Flickr Photo',
+      'weight' => '31',
+      'description' => 'The ID of your photoset can be found in the URL of that gallery following “sets” – excluding the slashes',
+      'type' => 'flickrfield',
+      'module' => 'flickrfield',
+    ),
+  );
+
   // Exported field: field_general_link
   $fields['image-field_general_link'] = array(
     'field_name' => 'field_general_link',
@@ -3029,6 +3087,7 @@ Yes|is UDI Sponsor?',
   t('Fax');
   t('File Upload Advanced');
   t('Files/Documents');
+  t('Flickr Photo');
   t('General Email');
   t('General Link');
   t('Image');
